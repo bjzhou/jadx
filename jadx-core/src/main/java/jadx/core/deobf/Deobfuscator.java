@@ -332,6 +332,11 @@ public class Deobfuscator {
 		}
 		if (shouldRename(classInfo.getShortName())) {
 			makeClsAlias(cls);
+		} else {
+			if (this.useSourceNameAsAlias) {
+				alias = getAliasFromSourceFile(cls);
+				clsMap.put(classInfo, new DeobfClsInfo(this, cls, pkg, alias));
+			}
 		}
 	}
 
