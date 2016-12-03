@@ -7,36 +7,36 @@ import java.lang.annotation.Target;
 
 public class TestAnnotationsParser extends AbstractTest {
 
-	@Target({ElementType.TYPE})
-	@Retention(RetentionPolicy.RUNTIME)
-	public static @interface A {
-		int i();
+    public static void main(String[] args) throws Exception {
+        new TestAnnotationsParser().testRun();
+    }
 
-		float f();
-	}
+    public boolean testRun() {
+        A c1 = C1.class.getAnnotation(A.class);
+        assertEquals(c1.i(), -1);
+        assertEquals(c1.f(), C1.FLOAT_CONST);
 
-	@A(i = -1, f = C1.FLOAT_CONST)
-	public static class C1 {
-		public static final float FLOAT_CONST = 3.14f;
-	}
+        A c2 = C2.class.getAnnotation(A.class);
+        assertEquals(c2.i(), -1025);
+        assertEquals(c2.f(), C2.FLOAT_CONST);
+        return true;
+    }
 
-	@A(i = -1025, f = C2.FLOAT_CONST)
-	public static class C2 {
-		public static final float FLOAT_CONST = 0xFF0000;
-	}
+    @Target({ElementType.TYPE})
+    @Retention(RetentionPolicy.RUNTIME)
+    public static @interface A {
+        int i();
 
-	public boolean testRun() {
-		A c1 = C1.class.getAnnotation(A.class);
-		assertEquals(c1.i(), -1);
-		assertEquals(c1.f(), C1.FLOAT_CONST);
+        float f();
+    }
 
-		A c2 = C2.class.getAnnotation(A.class);
-		assertEquals(c2.i(), -1025);
-		assertEquals(c2.f(), C2.FLOAT_CONST);
-		return true;
-	}
+    @A(i = -1, f = C1.FLOAT_CONST)
+    public static class C1 {
+        public static final float FLOAT_CONST = 3.14f;
+    }
 
-	public static void main(String[] args) throws Exception {
-		new TestAnnotationsParser().testRun();
-	}
+    @A(i = -1025, f = C2.FLOAT_CONST)
+    public static class C2 {
+        public static final float FLOAT_CONST = 0xFF0000;
+    }
 }

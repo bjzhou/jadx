@@ -12,21 +12,21 @@ dependencies {
     compile(project(":jadx-cli"))
 }
 
-task deleteTmp(type:Delete) {
+task deleteTmp(type: Delete) {
     delete testAppTmpDir
 }
 
-task copyApp(type:Copy, dependsOn: deleteTmp) {
+task copyApp(type: Copy, dependsOn: deleteTmp) {
     from testAppDir
     into testAppTmpDir
 }
 
-task buildApp(type:Exec, dependsOn: copyApp) {
+task buildApp(type: Exec, dependsOn: copyApp) {
     workingDir testAppTmpDir
     commandLine "./gradlew clean build ${checkTask}".split(' ')
 }
 
-task removeSource(type:Delete, dependsOn: buildApp) {
+task removeSource(type: Delete, dependsOn: buildApp) {
     delete outCodeDir
 }
 
@@ -53,7 +53,7 @@ def injectDependencies() {
     file(tmpBuildFile).write(updatedContent, 'UTF-8')
 }
 
-task runChecks(type:Exec, dependsOn: decompile) {
+task runChecks(type: Exec, dependsOn: decompile) {
     workingDir testAppTmpDir
     commandLine "./gradlew clean build ${checkTask}".split(' ')
 }

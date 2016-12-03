@@ -1,32 +1,32 @@
 package jadx.tests.integration.arrays;
 
+import org.junit.Test;
+
 import jadx.core.dex.nodes.ClassNode;
 import jadx.tests.api.IntegrationTest;
-
-import org.junit.Test;
 
 import static jadx.tests.api.utils.JadxMatchers.containsOne;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.Assert.assertThat;
 
 public class TestArrays3 extends IntegrationTest {
-	public static class TestCls {
+    @Test
+    public void test() {
+        noDebugInfo();
+        ClassNode cls = getClassNode(TestCls.class);
+        String code = cls.getCode().toString();
 
-		private Object test(byte[] bArr) {
-			return new Object[]{bArr};
-		}
+        assertThat(code, containsOne("return new Object[]{bArr};"));
+    }
 
-		public void check() {
-			assertThat(test(new byte[]{1, 2}), instanceOf(Object[].class));
-		}
-	}
+    public static class TestCls {
 
-	@Test
-	public void test() {
-		noDebugInfo();
-		ClassNode cls = getClassNode(TestCls.class);
-		String code = cls.getCode().toString();
+        private Object test(byte[] bArr) {
+            return new Object[]{bArr};
+        }
 
-		assertThat(code, containsOne("return new Object[]{bArr};"));
-	}
+        public void check() {
+            assertThat(test(new byte[]{1, 2}), instanceOf(Object[].class));
+        }
+    }
 }

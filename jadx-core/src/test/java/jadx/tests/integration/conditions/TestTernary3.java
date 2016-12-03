@@ -1,12 +1,12 @@
 package jadx.tests.integration.conditions;
 
+import org.junit.Test;
+
 import jadx.core.dex.instructions.args.InsnArg;
 import jadx.core.dex.instructions.args.Named;
 import jadx.core.dex.instructions.args.RegisterArg;
 import jadx.core.dex.nodes.ClassNode;
 import jadx.tests.api.IntegrationTest;
-
-import org.junit.Test;
 
 import static jadx.tests.api.utils.JadxMatchers.containsOne;
 import static org.hamcrest.CoreMatchers.containsString;
@@ -15,35 +15,35 @@ import static org.junit.Assert.assertThat;
 
 public class TestTernary3 extends IntegrationTest {
 
-	public static class TestCls {
+    @Test
+    public void test() {
+        ClassNode cls = getClassNode(TestCls.class);
+        String code = cls.getCode().toString();
 
-		public boolean isNameEquals(InsnArg arg) {
-			String n = getName(arg);
-			if (n == null || !(arg instanceof Named)) {
-				return false;
-			}
-			return n.equals(((Named) arg).getName());
-		}
+        assertThat(code, containsOne("if (n == null || !(arg instanceof Named)) {"));
+        assertThat(code, containsOne("return n.equals(((Named) arg).getName());"));
 
-		private String getName(InsnArg arg) {
-			if (arg instanceof RegisterArg) {
-				return "r";
-			}
-			if (arg instanceof Named) {
-				return "n";
-			}
-			return arg.toString();
-		}
-	}
+        assertThat(code, not(containsString("if ((arg instanceof RegisterArg)) {")));
+    }
 
-	@Test
-	public void test() {
-		ClassNode cls = getClassNode(TestCls.class);
-		String code = cls.getCode().toString();
+    public static class TestCls {
 
-		assertThat(code, containsOne("if (n == null || !(arg instanceof Named)) {"));
-		assertThat(code, containsOne("return n.equals(((Named) arg).getName());"));
+        public boolean isNameEquals(InsnArg arg) {
+            String n = getName(arg);
+            if (n == null || !(arg instanceof Named)) {
+                return false;
+            }
+            return n.equals(((Named) arg).getName());
+        }
 
-		assertThat(code, not(containsString("if ((arg instanceof RegisterArg)) {")));
-	}
+        private String getName(InsnArg arg) {
+            if (arg instanceof RegisterArg) {
+                return "r";
+            }
+            if (arg instanceof Named) {
+                return "n";
+            }
+            return arg.toString();
+        }
+    }
 }

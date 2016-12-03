@@ -1,5 +1,9 @@
 package jadx.gui.utils;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.slf4j.LoggerFactory;
+
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
@@ -8,85 +12,79 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Layout;
 import ch.qos.logback.core.read.CyclicBufferAppender;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.slf4j.LoggerFactory;
-
 public class LogCollector extends CyclicBufferAppender<ILoggingEvent> {
-	private static LogCollector instance = new LogCollector();
+    private static LogCollector instance = new LogCollector();
+    private Layout<ILoggingEvent> layout;
+    @Nullable
+    private ILogListener listener;
 
-	public static LogCollector getInstance() {
-		return instance;
-	}
+    public LogCollector() {
+        setName("LogCollector");
+        setMaxSize(5000);
+    }
 
-	public static void register() {
-		Logger rootLogger = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
-		LoggerContext loggerContext = rootLogger.getLoggerContext();
+    public static LogCollector getInstance() {
+        return instance;
+    }
 
-		PatternLayout layout = new PatternLayout();
-		layout.setContext(loggerContext);
-		layout.setPattern("%-5level: %msg%n");
-		layout.start();
+    public static void register() {
+        Logger rootLogger = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
+        LoggerContext loggerContext = rootLogger.getLoggerContext();
 
-		instance.setContext(loggerContext);
-		instance.setLayout(layout);
-		instance.start();
+        PatternLayout layout = new PatternLayout();
+        layout.setContext(loggerContext);
+        layout.setPattern("%-5level: %msg%n");
+        layout.start();
 
-		rootLogger.addAppender(instance);
-	}
+        instance.setContext(loggerContext);
+        instance.setLayout(layout);
+        instance.start();
 
-	public interface ILogListener {
+        rootLogger.addAppender(instance);
+    }
 
-		Level getFilterLevel();
+    @Override
+    protected void append(ILoggingEvent event) {
+        super.append(event);
+        if (listener != null
+                && event.getLevel().isGreaterOrEqual(listener.getFilterLevel())) {
+            synchronized (this) {
+                listener.onAppend(layout.doLayout(event));
+            }
+        }
+    }
 
-		void onAppend(String logStr);
-	}
+    public void setLayout(Layout<ILoggingEvent> layout) {
+        this.layout = layout;
+    }
 
-	private Layout<ILoggingEvent> layout;
+    public void registerListener(@NotNull ILogListener listener) {
+        this.listener = listener;
+        synchronized (this) {
+            listener.onAppend(init(listener.getFilterLevel()));
+        }
+    }
 
-	@Nullable
-	private ILogListener listener;
+    public void resetListener() {
+        this.listener = null;
+    }
 
-	public LogCollector() {
-		setName("LogCollector");
-		setMaxSize(5000);
-	}
+    private String init(Level filterLevel) {
+        StringBuilder sb = new StringBuilder();
+        int length = getLength();
+        for (int i = 0; i < length; i++) {
+            ILoggingEvent event = get(i);
+            if (event.getLevel().isGreaterOrEqual(filterLevel)) {
+                sb.append(layout.doLayout(event));
+            }
+        }
+        return sb.toString();
+    }
 
-	@Override
-	protected void append(ILoggingEvent event) {
-		super.append(event);
-		if (listener != null
-				&& event.getLevel().isGreaterOrEqual(listener.getFilterLevel())) {
-			synchronized (this) {
-				listener.onAppend(layout.doLayout(event));
-			}
-		}
-	}
+    public interface ILogListener {
 
-	public void setLayout(Layout<ILoggingEvent> layout) {
-		this.layout = layout;
-	}
+        Level getFilterLevel();
 
-	public void registerListener(@NotNull ILogListener listener) {
-		this.listener = listener;
-		synchronized (this) {
-			listener.onAppend(init(listener.getFilterLevel()));
-		}
-	}
-
-	public void resetListener() {
-		this.listener = null;
-	}
-
-	private String init(Level filterLevel) {
-		StringBuilder sb = new StringBuilder();
-		int length = getLength();
-		for (int i = 0; i < length; i++) {
-			ILoggingEvent event = get(i);
-			if (event.getLevel().isGreaterOrEqual(filterLevel)) {
-				sb.append(layout.doLayout(event));
-			}
-		}
-		return sb.toString();
-	}
+        void onAppend(String logStr);
+    }
 }

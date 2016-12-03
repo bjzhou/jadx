@@ -7,42 +7,42 @@ package jadx.samples;
  */
 public class TestTypeResolver2 extends AbstractTest {
 
-	private static String result = "";
+    private static String result = "";
 
-	public void testOverloadedMethods() {
-		Object s1 = "The";
-		Object s2 = "answer";
-		doPrint((Object) "You should know:");
-		for (int i = 0; i < 2; i++) {
-			doPrint(s1);
-			doPrint(s2);
-			s1 = "is";
-			s2 = new Integer(42);
-		}
-	}
+    private static void doPrint(String s1) {
+        fail();
+    }
 
-	private static void doPrint(String s1) {
-		fail();
-	}
+    private static void doPrint(Integer s1) {
+        fail();
+    }
 
-	private static void doPrint(Integer s1) {
-		fail();
-	}
+    private static void doPrint(Object s1) {
+        // correct call
+        result += s1 + " ";
+    }
 
-	private static void doPrint(Object s1) {
-		// correct call
-		result += s1 + " ";
-	}
+    public static void main(String[] args) throws Exception {
+        (new TestTypeResolver2()).testRun();
+    }
 
-	@Override
-	public boolean testRun() throws Exception {
-		testOverloadedMethods();
+    public void testOverloadedMethods() {
+        Object s1 = "The";
+        Object s2 = "answer";
+        doPrint((Object) "You should know:");
+        for (int i = 0; i < 2; i++) {
+            doPrint(s1);
+            doPrint(s2);
+            s1 = "is";
+            s2 = new Integer(42);
+        }
+    }
 
-		assertEquals(result, "You should know: The answer is 42 ");
-		return true;
-	}
+    @Override
+    public boolean testRun() throws Exception {
+        testOverloadedMethods();
 
-	public static void main(String[] args) throws Exception {
-		(new TestTypeResolver2()).testRun();
-	}
+        assertEquals(result, "You should know: The answer is 42 ");
+        return true;
+    }
 }

@@ -4,9 +4,9 @@ import java.util.List;
 
 public interface IRegion extends IContainer {
 
-	IRegion getParent();
+    IRegion getParent();
 
-	List<IContainer> getSubBlocks();
+    List<IContainer> getSubBlocks();
 
-	boolean replaceSubBlock(IContainer oldBlock, IContainer newBlock);
+    boolean replaceSubBlock(IContainer oldBlock, IContainer newBlock);
 }

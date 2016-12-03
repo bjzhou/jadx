@@ -1,9 +1,9 @@
 package jadx.tests.integration.variables;
 
+import org.junit.Test;
+
 import jadx.core.dex.nodes.ClassNode;
 import jadx.tests.api.IntegrationTest;
-
-import org.junit.Test;
 
 import static jadx.tests.api.utils.JadxMatchers.containsOne;
 import static org.hamcrest.CoreMatchers.containsString;
@@ -13,44 +13,44 @@ import static org.junit.Assert.assertTrue;
 
 public class TestVariables5 extends IntegrationTest {
 
-	public static class TestCls {
-		public String f = "str//ing";
-		private boolean enabled;
+    @Test
+    public void test() {
+        noDebugInfo();
+        ClassNode cls = getClassNode(TestCls.class);
+        String code = cls.getCode().toString();
 
-		private void testIfInLoop() {
-			int j = 0;
-			for (int i = 0; i < f.length(); i++) {
-				char ch = f.charAt(i);
-				if (ch == '/') {
-					j++;
-					if (j == 2) {
-						setEnabled(true);
-						return;
-					}
-				}
-			}
-			setEnabled(false);
-		}
+        assertThat(code, not(containsString("int i2++;")));
+        assertThat(code, containsOne("int i = 0;"));
+        assertThat(code, containsOne("i++;"));
+    }
 
-		private void setEnabled(boolean b) {
-			this.enabled = b;
-		}
+    public static class TestCls {
+        public String f = "str//ing";
+        private boolean enabled;
 
-		public void check() {
-			setEnabled(false);
-			testIfInLoop();
-			assertTrue(enabled);
-		}
-	}
+        private void testIfInLoop() {
+            int j = 0;
+            for (int i = 0; i < f.length(); i++) {
+                char ch = f.charAt(i);
+                if (ch == '/') {
+                    j++;
+                    if (j == 2) {
+                        setEnabled(true);
+                        return;
+                    }
+                }
+            }
+            setEnabled(false);
+        }
 
-	@Test
-	public void test() {
-		noDebugInfo();
-		ClassNode cls = getClassNode(TestCls.class);
-		String code = cls.getCode().toString();
+        private void setEnabled(boolean b) {
+            this.enabled = b;
+        }
 
-		assertThat(code, not(containsString("int i2++;")));
-		assertThat(code, containsOne("int i = 0;"));
-		assertThat(code, containsOne("i++;"));
-	}
+        public void check() {
+            setEnabled(false);
+            testIfInLoop();
+            assertTrue(enabled);
+        }
+    }
 }

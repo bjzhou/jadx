@@ -1,67 +1,66 @@
 package jadx.api;
 
-import jadx.core.xmlgen.ResContainer;
-
 import java.io.File;
+
+import jadx.core.xmlgen.ResContainer;
 
 public class ResourceFile {
 
-	public static final class ZipRef {
-		private final File zipFile;
-		private final String entryName;
+    private final JadxDecompiler decompiler;
+    private final String name;
+    private final ResourceType type;
+    private ZipRef zipRef;
+    ResourceFile(JadxDecompiler decompiler, String name, ResourceType type) {
+        this.decompiler = decompiler;
+        this.name = name;
+        this.type = type;
+    }
 
-		public ZipRef(File zipFile, String entryName) {
-			this.zipFile = zipFile;
-			this.entryName = entryName;
-		}
+    public String getName() {
+        return name;
+    }
 
-		public File getZipFile() {
-			return zipFile;
-		}
+    public ResourceType getType() {
+        return type;
+    }
 
-		public String getEntryName() {
-			return entryName;
-		}
+    public ResContainer loadContent() {
+        return ResourcesLoader.loadContent(decompiler, this);
+    }
 
-		@Override
-		public String toString() {
-			return "ZipRef{" + zipFile + ", '" + entryName + "'}";
-		}
-	}
+    ZipRef getZipRef() {
+        return zipRef;
+    }
 
-	private final JadxDecompiler decompiler;
-	private final String name;
-	private final ResourceType type;
-	private ZipRef zipRef;
+    void setZipRef(ZipRef zipRef) {
+        this.zipRef = zipRef;
+    }
 
-	ResourceFile(JadxDecompiler decompiler, String name, ResourceType type) {
-		this.decompiler = decompiler;
-		this.name = name;
-		this.type = type;
-	}
+    @Override
+    public String toString() {
+        return "ResourceFile{name='" + name + '\'' + ", type=" + type + "}";
+    }
 
-	public String getName() {
-		return name;
-	}
+    public static final class ZipRef {
+        private final File zipFile;
+        private final String entryName;
 
-	public ResourceType getType() {
-		return type;
-	}
+        public ZipRef(File zipFile, String entryName) {
+            this.zipFile = zipFile;
+            this.entryName = entryName;
+        }
 
-	public ResContainer loadContent() {
-		return ResourcesLoader.loadContent(decompiler, this);
-	}
+        public File getZipFile() {
+            return zipFile;
+        }
 
-	void setZipRef(ZipRef zipRef) {
-		this.zipRef = zipRef;
-	}
+        public String getEntryName() {
+            return entryName;
+        }
 
-	ZipRef getZipRef() {
-		return zipRef;
-	}
-
-	@Override
-	public String toString() {
-		return "ResourceFile{name='" + name + '\'' + ", type=" + type + "}";
-	}
+        @Override
+        public String toString() {
+            return "ZipRef{" + zipFile + ", '" + entryName + "'}";
+        }
+    }
 }

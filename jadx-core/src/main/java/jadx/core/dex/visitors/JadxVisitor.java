@@ -11,23 +11,23 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 public @interface JadxVisitor {
-	/**
-	 * Visitor short name (identifier)
-	 */
-	String name();
+    /**
+     * Visitor short name (identifier)
+     */
+    String name();
 
-	/**
-	 * Detailed visitor description
-	 */
-	String desc() default "";
+    /**
+     * Detailed visitor description
+     */
+    String desc() default "";
 
-	/**
-	 * This visitor must be run <b>after</b> listed visitors
-	 */
-	Class<? extends IDexTreeVisitor>[] runAfter() default {};
+    /**
+     * This visitor must be run <b>after</b> listed visitors
+     */
+    Class<? extends IDexTreeVisitor>[] runAfter() default {};
 
-	/**
-	 * This visitor must be run <b>before</b> listed visitors
-	 */
-	Class<? extends IDexTreeVisitor>[] runBefore() default {};
+    /**
+     * This visitor must be run <b>before</b> listed visitors
+     */
+    Class<? extends IDexTreeVisitor>[] runBefore() default {};
 }

@@ -7,55 +7,53 @@ import jadx.core.dex.nodes.MethodNode;
 
 public class FieldInitAttr implements IAttribute {
 
-	public static final FieldInitAttr NULL_VALUE = constValue(null);
+    public static final FieldInitAttr NULL_VALUE = constValue(null);
+    private final Object value;
+    private final InitType valueType;
+    private final MethodNode insnMth;
+    private FieldInitAttr(InitType valueType, Object value, MethodNode insnMth) {
+        this.value = value;
+        this.valueType = valueType;
+        this.insnMth = insnMth;
+    }
 
-	public enum InitType {
-		CONST,
-		INSN
+    public static FieldInitAttr constValue(Object value) {
+        return new FieldInitAttr(InitType.CONST, value, null);
+    }
 
-	}
+    public static FieldInitAttr insnValue(MethodNode mth, InsnNode insn) {
+        return new FieldInitAttr(InitType.INSN, insn, mth);
+    }
 
-	private final Object value;
-	private final InitType valueType;
-	private final MethodNode insnMth;
+    public Object getValue() {
+        return value;
+    }
 
-	private FieldInitAttr(InitType valueType, Object value, MethodNode insnMth) {
-		this.value = value;
-		this.valueType = valueType;
-		this.insnMth = insnMth;
-	}
+    public InsnNode getInsn() {
+        return (InsnNode) value;
+    }
 
-	public static FieldInitAttr constValue(Object value) {
-		return new FieldInitAttr(InitType.CONST, value, null);
-	}
+    public InitType getValueType() {
+        return valueType;
+    }
 
-	public static FieldInitAttr insnValue(MethodNode mth, InsnNode insn) {
-		return new FieldInitAttr(InitType.INSN, insn, mth);
-	}
+    public MethodNode getInsnMth() {
+        return insnMth;
+    }
 
-	public Object getValue() {
-		return value;
-	}
+    @Override
+    public AType<FieldInitAttr> getType() {
+        return AType.FIELD_INIT;
+    }
 
-	public InsnNode getInsn() {
-		return (InsnNode) value;
-	}
+    @Override
+    public String toString() {
+        return "V=" + value;
+    }
 
-	public InitType getValueType() {
-		return valueType;
-	}
+    public enum InitType {
+        CONST,
+        INSN
 
-	public MethodNode getInsnMth() {
-		return insnMth;
-	}
-
-	@Override
-	public AType<FieldInitAttr> getType() {
-		return AType.FIELD_INIT;
-	}
-
-	@Override
-	public String toString() {
-		return "V=" + value;
-	}
+    }
 }

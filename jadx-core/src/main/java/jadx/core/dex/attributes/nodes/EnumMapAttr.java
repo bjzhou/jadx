@@ -1,49 +1,49 @@
 package jadx.core.dex.attributes.nodes;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import jadx.core.dex.attributes.AType;
 import jadx.core.dex.attributes.IAttribute;
 import jadx.core.dex.nodes.FieldNode;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public class EnumMapAttr implements IAttribute {
 
-	public static class KeyValueMap {
-		private final Map<Object, Object> map = new HashMap<Object, Object>();
+    private final Map<FieldNode, KeyValueMap> fieldsMap = new HashMap<FieldNode, KeyValueMap>();
 
-		public Object get(Object key) {
-			return map.get(key);
-		}
+    public KeyValueMap getMap(FieldNode field) {
+        return fieldsMap.get(field);
+    }
 
-		void put(Object key, Object value) {
-			map.put(key, value);
-		}
-	}
+    public void add(FieldNode field, Object key, Object value) {
+        KeyValueMap map = getMap(field);
+        if (map == null) {
+            map = new KeyValueMap();
+            fieldsMap.put(field, map);
+        }
+        map.put(key, value);
+    }
 
-	private final Map<FieldNode, KeyValueMap> fieldsMap = new HashMap<FieldNode, KeyValueMap>();
+    @Override
+    public AType<EnumMapAttr> getType() {
+        return AType.ENUM_MAP;
+    }
 
-	public KeyValueMap getMap(FieldNode field) {
-		return fieldsMap.get(field);
-	}
+    @Override
+    public String toString() {
+        return "Enum fields map: " + fieldsMap;
+    }
 
-	public void add(FieldNode field, Object key, Object value) {
-		KeyValueMap map = getMap(field);
-		if (map == null) {
-			map = new KeyValueMap();
-			fieldsMap.put(field, map);
-		}
-		map.put(key, value);
-	}
+    public static class KeyValueMap {
+        private final Map<Object, Object> map = new HashMap<Object, Object>();
 
-	@Override
-	public AType<EnumMapAttr> getType() {
-		return AType.ENUM_MAP;
-	}
+        public Object get(Object key) {
+            return map.get(key);
+        }
 
-	@Override
-	public String toString() {
-		return "Enum fields map: " + fieldsMap;
-	}
+        void put(Object key, Object value) {
+            map.put(key, value);
+        }
+    }
 
 }

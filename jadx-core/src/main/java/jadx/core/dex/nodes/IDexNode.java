@@ -2,8 +2,8 @@ package jadx.core.dex.nodes;
 
 public interface IDexNode {
 
-	DexNode dex();
+    DexNode dex();
 
-	RootNode root();
+    RootNode root();
 }
 

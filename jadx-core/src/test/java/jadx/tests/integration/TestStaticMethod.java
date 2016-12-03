@@ -1,30 +1,30 @@
 package jadx.tests.integration;
 
+import org.junit.Test;
+
 import jadx.core.dex.nodes.ClassNode;
 import jadx.tests.api.IntegrationTest;
-
-import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertThat;
 
 public class TestStaticMethod extends IntegrationTest {
 
-	public static class TestCls {
-		static {
-			f();
-		}
+    @Test
+    public void test() {
+        ClassNode cls = getClassNode(TestCls.class);
+        String code = cls.getCode().toString();
 
-		private static void f() {
-		}
-	}
+        assertThat(code, containsString("static {"));
+        assertThat(code, containsString("private static void f() {"));
+    }
 
-	@Test
-	public void test() {
-		ClassNode cls = getClassNode(TestCls.class);
-		String code = cls.getCode().toString();
+    public static class TestCls {
+        static {
+            f();
+        }
 
-		assertThat(code, containsString("static {"));
-		assertThat(code, containsString("private static void f() {"));
-	}
+        private static void f() {
+        }
+    }
 }

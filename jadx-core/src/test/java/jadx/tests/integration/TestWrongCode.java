@@ -1,9 +1,9 @@
 package jadx.tests.integration;
 
+import org.junit.Test;
+
 import jadx.core.dex.nodes.ClassNode;
 import jadx.tests.api.IntegrationTest;
-
-import org.junit.Test;
 
 import static jadx.tests.api.utils.JadxMatchers.containsOne;
 import static org.hamcrest.CoreMatchers.containsString;
@@ -12,36 +12,36 @@ import static org.junit.Assert.assertThat;
 
 public class TestWrongCode extends IntegrationTest {
 
-	public static class TestCls {
-		private int test() {
-			int[] a = null;
-			return a.length;
-		}
+    @Test
+    public void test() {
+        ClassNode cls = getClassNode(TestCls.class);
+        String code = cls.getCode().toString();
 
-		@SuppressWarnings("empty")
-		private int test2(int a) {
-			if (a == 0) {
-				;
-			}
-			return a;
-		}
-	}
+        assertThat(code, not(containsString("return false.length;")));
+        assertThat(code, containsOne("int[] a = null;"));
+        assertThat(code, containsOne("return a.length;"));
 
-	@Test
-	public void test() {
-		ClassNode cls = getClassNode(TestCls.class);
-		String code = cls.getCode().toString();
+        assertThat(code, containsString("return a == 0 ? a : a;"));
+    }
 
-		assertThat(code, not(containsString("return false.length;")));
-		assertThat(code, containsOne("int[] a = null;"));
-		assertThat(code, containsOne("return a.length;"));
+    @Test
+    public void testNoDebug() {
+        noDebugInfo();
+        getClassNode(TestCls.class);
+    }
 
-		assertThat(code, containsString("return a == 0 ? a : a;"));
-	}
+    public static class TestCls {
+        private int test() {
+            int[] a = null;
+            return a.length;
+        }
 
-	@Test
-	public void testNoDebug() {
-		noDebugInfo();
-		getClassNode(TestCls.class);
-	}
+        @SuppressWarnings("empty")
+        private int test2(int a) {
+            if (a == 0) {
+                ;
+            }
+            return a;
+        }
+    }
 }

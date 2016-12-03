@@ -1,9 +1,9 @@
 package jadx.tests.integration.annotations;
 
+import org.junit.Test;
+
 import jadx.core.dex.nodes.ClassNode;
 import jadx.tests.api.IntegrationTest;
-
-import org.junit.Test;
 
 import static jadx.tests.api.utils.JadxMatchers.containsOne;
 import static org.hamcrest.CoreMatchers.containsString;
@@ -12,54 +12,54 @@ import static org.junit.Assert.assertThat;
 
 public class TestAnnotations extends IntegrationTest {
 
-	public static class TestCls {
-		private static @interface A {
-			int a();
-		}
+    @Test
+    public void test() {
+        ClassNode cls = getClassNode(TestCls.class);
+        String code = cls.getCode().toString();
 
-		@A(a = -1)
-		public void methodA1() {
-		}
+        assertThat(code, not(containsString("@A(a = 255)")));
+        assertThat(code, containsOne("@A(a = -1)"));
+        assertThat(code, containsOne("@A(a = -253)"));
+        assertThat(code, containsOne("@A(a = -11253)"));
+        assertThat(code, containsOne("@V(false)"));
+        assertThat(code, not(containsString("@D()")));
+        assertThat(code, containsOne("@D"));
 
-		@A(a = -253)
-		public void methodA2() {
-		}
+        assertThat(code, containsOne("int a();"));
+        assertThat(code, containsOne("float value() default 1.1f;"));
+    }
 
-		@A(a = -11253)
-		public void methodA3() {
-		}
+    public static class TestCls {
+        @A(a = -1)
+        public void methodA1() {
+        }
 
-		private static @interface V {
-			boolean value();
-		}
+        @A(a = -253)
+        public void methodA2() {
+        }
 
-		@V(false)
-		public void methodV() {
-		}
+        @A(a = -11253)
+        public void methodA3() {
+        }
 
-		private static @interface D {
-			float value() default 1.1f;
-		}
+        @V(false)
+        public void methodV() {
+        }
 
-		@D
-		public void methodD() {
-		}
-	}
+        @D
+        public void methodD() {
+        }
 
-	@Test
-	public void test() {
-		ClassNode cls = getClassNode(TestCls.class);
-		String code = cls.getCode().toString();
+        private static @interface A {
+            int a();
+        }
 
-		assertThat(code, not(containsString("@A(a = 255)")));
-		assertThat(code, containsOne("@A(a = -1)"));
-		assertThat(code, containsOne("@A(a = -253)"));
-		assertThat(code, containsOne("@A(a = -11253)"));
-		assertThat(code, containsOne("@V(false)"));
-		assertThat(code, not(containsString("@D()")));
-		assertThat(code, containsOne("@D"));
+        private static @interface V {
+            boolean value();
+        }
 
-		assertThat(code, containsOne("int a();"));
-		assertThat(code, containsOne("float value() default 1.1f;"));
-	}
+        private static @interface D {
+            float value() default 1.1f;
+        }
+    }
 }

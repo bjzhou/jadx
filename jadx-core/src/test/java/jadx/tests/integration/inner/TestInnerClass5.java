@@ -1,9 +1,9 @@
 package jadx.tests.integration.inner;
 
+import org.junit.Test;
+
 import jadx.core.dex.nodes.ClassNode;
 import jadx.tests.api.IntegrationTest;
-
-import org.junit.Test;
 
 import static jadx.tests.api.utils.JadxMatchers.containsOne;
 import static org.junit.Assert.assertThat;
@@ -11,89 +11,89 @@ import static org.junit.Assert.assertTrue;
 
 public class TestInnerClass5 extends IntegrationTest {
 
-	public static class TestCls {
+    @Test
+    public void test() {
+        ClassNode cls = getClassNode(TestCls.class);
+        String code = cls.getCode().toString();
 
-		private String i0;
+        assertThat(code, containsOne("public class I0 {"));
+        assertThat(code, containsOne("public class I1 {"));
+    }
 
-		public class A {
+    public static class TestCls {
 
-			protected String a;
+        private String i0;
 
-			public A() {
-				a = "";
-			}
+        public void check() throws Exception {
+            assertTrue(new I0().i().equals("i-i0i1i0i1i2i0i1i2i1i2i3i1i2i3a"));
+            assertTrue(i0.equals("i1"));
+        }
 
-			public String a() {
-				return "";
-			}
-		}
+        public class A {
 
-		public class I0 {
-			private String i0;
-			private String i1;
+            protected String a;
 
-			public class I1 {
-				private String i0;
-				private String i1;
-				private String i2;
+            public A() {
+                a = "";
+            }
 
-				public I1() {
-					TestCls.this.i0 = "i0";
-					I0.this.i0 = "i1";
-					I0.this.i1 = "i2";
+            public String a() {
+                return "";
+            }
+        }
 
-					i0 = "i0";
-					i1 = "i1";
-					i2 = "i2";
-				}
+        public class I0 {
+            private String i0;
+            private String i1;
 
-				public String i() {
+            public I0() {
+                TestCls.this.i0 = "i-";
+                i0 = "i0";
+                i1 = "i1";
+            }
 
-					String result = TestCls.this.i0 + I0.this.i0 + I0.this.i1 + i0 + i1 + i2;
+            public String i() {
+                String result = TestCls.this.i0 + i0 + i1;
+                return result + new I1().i();
+            }
 
-					A a = new A() {
+            public class I1 {
+                private String i0;
+                private String i1;
+                private String i2;
 
-						public String a() {
-							TestCls.this.i0 = "i1";
-							I0.this.i0 = "i2";
-							I0.this.i1 = "i3";
-							I1.this.i0 = "i1";
-							I1.this.i1 = "i2";
-							I1.this.i2 = "i3";
-							a = "a";
+                public I1() {
+                    TestCls.this.i0 = "i0";
+                    I0.this.i0 = "i1";
+                    I0.this.i1 = "i2";
 
-							return TestCls.this.i0 + I0.this.i0 + I0.this.i1 + I1.this.i0 + I1.this.i1 + I1.this.i2 + a;
-						}
-					};
+                    i0 = "i0";
+                    i1 = "i1";
+                    i2 = "i2";
+                }
 
-					return result + a.a();
-				}
-			}
+                public String i() {
 
-			public I0() {
-				TestCls.this.i0 = "i-";
-				i0 = "i0";
-				i1 = "i1";
-			}
+                    String result = TestCls.this.i0 + I0.this.i0 + I0.this.i1 + i0 + i1 + i2;
 
-			public String i() {
-				String result = TestCls.this.i0 + i0 + i1;
-				return result + new I1().i();
-			}
-		}
+                    A a = new A() {
 
-		public void check() throws Exception {
-			assertTrue(new I0().i().equals("i-i0i1i0i1i2i0i1i2i1i2i3i1i2i3a"));
-			assertTrue(i0.equals("i1"));
-		}
-	}
+                        public String a() {
+                            TestCls.this.i0 = "i1";
+                            I0.this.i0 = "i2";
+                            I0.this.i1 = "i3";
+                            I1.this.i0 = "i1";
+                            I1.this.i1 = "i2";
+                            I1.this.i2 = "i3";
+                            a = "a";
 
-	@Test
-	public void test() {
-		ClassNode cls = getClassNode(TestCls.class);
-		String code = cls.getCode().toString();
+                            return TestCls.this.i0 + I0.this.i0 + I0.this.i1 + I1.this.i0 + I1.this.i1 + I1.this.i2 + a;
+                        }
+                    };
 
-		assertThat(code, containsOne("public class I0 {"));
-		assertThat(code, containsOne("public class I1 {"));
-	}
+                    return result + a.a();
+                }
+            }
+        }
+    }
 }

@@ -2,72 +2,72 @@ package jadx.core.dex.instructions;
 
 public enum InsnType {
 
-	CONST,
-	CONST_STR,
-	CONST_CLASS,
+    CONST,
+    CONST_STR,
+    CONST_CLASS,
 
-	ARITH,
-	NEG,
+    ARITH,
+    NEG,
 
-	MOVE,
-	CAST,
+    MOVE,
+    CAST,
 
-	RETURN,
-	GOTO,
+    RETURN,
+    GOTO,
 
-	THROW,
-	MOVE_EXCEPTION,
+    THROW,
+    MOVE_EXCEPTION,
 
-	CMP_L,
-	CMP_G,
-	IF,
-	SWITCH,
+    CMP_L,
+    CMP_G,
+    IF,
+    SWITCH,
 
-	MONITOR_ENTER,
-	MONITOR_EXIT,
+    MONITOR_ENTER,
+    MONITOR_EXIT,
 
-	CHECK_CAST,
-	INSTANCE_OF,
+    CHECK_CAST,
+    INSTANCE_OF,
 
-	ARRAY_LENGTH,
-	FILL_ARRAY,
-	FILLED_NEW_ARRAY,
+    ARRAY_LENGTH,
+    FILL_ARRAY,
+    FILLED_NEW_ARRAY,
 
-	AGET,
-	APUT,
+    AGET,
+    APUT,
 
-	NEW_ARRAY,
-	NEW_INSTANCE,
+    NEW_ARRAY,
+    NEW_INSTANCE,
 
-	IGET,
-	IPUT,
+    IGET,
+    IPUT,
 
-	SGET,
-	SPUT,
+    SGET,
+    SPUT,
 
-	INVOKE,
+    INVOKE,
 
-	// *** Additional instructions ***
+    // *** Additional instructions ***
 
-	// replacement for removed instructions
-	NOP,
+    // replacement for removed instructions
+    NOP,
 
-	TERNARY,
-	CONSTRUCTOR,
+    TERNARY,
+    CONSTRUCTOR,
 
-	BREAK,
-	CONTINUE,
+    BREAK,
+    CONTINUE,
 
-	// strings concatenation
-	STR_CONCAT,
+    // strings concatenation
+    STR_CONCAT,
 
-	// just generate one argument
-	ONE_ARG,
-	PHI,
+    // just generate one argument
+    ONE_ARG,
+    PHI,
 
-	// merge all arguments in one
-	MERGE,
+    // merge all arguments in one
+    MERGE,
 
-	// TODO: now multidimensional arrays created using Array.newInstance function
-	NEW_MULTIDIM_ARRAY
+    // TODO: now multidimensional arrays created using Array.newInstance function
+    NEW_MULTIDIM_ARRAY
 }

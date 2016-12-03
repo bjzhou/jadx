@@ -7,25 +7,25 @@ import jadx.core.dex.nodes.InsnNode;
 
 public class SelectTypeVisitor {
 
-	private SelectTypeVisitor() {
-	}
+    private SelectTypeVisitor() {
+    }
 
-	public static void visit(DexNode dex, InsnNode insn) {
-		InsnArg res = insn.getResult();
-		if (res != null && !res.getType().isTypeKnown()) {
-			selectType(dex, res);
-		}
-		for (InsnArg arg : insn.getArguments()) {
-			if (!arg.getType().isTypeKnown()) {
-				selectType(dex, arg);
-			}
-		}
-	}
+    public static void visit(DexNode dex, InsnNode insn) {
+        InsnArg res = insn.getResult();
+        if (res != null && !res.getType().isTypeKnown()) {
+            selectType(dex, res);
+        }
+        for (InsnArg arg : insn.getArguments()) {
+            if (!arg.getType().isTypeKnown()) {
+                selectType(dex, arg);
+            }
+        }
+    }
 
-	private static void selectType(DexNode dex, InsnArg arg) {
-		ArgType t = arg.getType();
-		ArgType newType = ArgType.merge(dex, t, t.selectFirst());
-		arg.setType(newType);
-	}
+    private static void selectType(DexNode dex, InsnArg arg) {
+        ArgType t = arg.getType();
+        ArgType newType = ArgType.merge(dex, t, t.selectFirst());
+        arg.setType(newType);
+    }
 
 }

@@ -1,70 +1,70 @@
 package jadx.tests.integration.enums;
 
+import org.junit.Test;
+
 import jadx.core.dex.nodes.ClassNode;
 import jadx.tests.api.IntegrationTest;
-
-import org.junit.Test;
 
 import static jadx.tests.api.utils.JadxMatchers.containsLines;
 import static org.junit.Assert.assertThat;
 
 public class TestEnums extends IntegrationTest {
 
-	public static class TestCls {
+    @Test
+    public void test() {
+        ClassNode cls = getClassNode(TestCls.class);
+        String code = cls.getCode().toString();
 
-		public enum EmptyEnum {
-		}
+        assertThat(code, containsLines(1, "public enum EmptyEnum {", "}"));
+        assertThat(code, containsLines(1,
+                "public enum EmptyEnum2 {",
+                indent(1) + ";",
+                "",
+                indent(1) + "public static void mth() {",
+                indent(1) + "}",
+                "}"));
 
-		public enum EmptyEnum2 {
-			;
+        assertThat(code, containsLines(1, "public enum Direction {",
+                indent(1) + "NORTH,",
+                indent(1) + "SOUTH,",
+                indent(1) + "EAST,",
+                indent(1) + "WEST",
+                "}"));
 
-			public static void mth() {
-			}
-		}
+        assertThat(code, containsLines(1, "public enum Singleton {",
+                indent(1) + "INSTANCE;",
+                "",
+                indent(1) + "public String test() {",
+                indent(2) + "return \"\";",
+                indent(1) + "}",
+                "}"));
+    }
 
-		public enum Direction {
-			NORTH,
-			SOUTH,
-			EAST,
-			WEST
-		}
+    public static class TestCls {
 
-		public enum Singleton {
-			INSTANCE;
+        public enum EmptyEnum {
+        }
 
-			public String test() {
-				return "";
-			}
-		}
-	}
+        public enum EmptyEnum2 {
+            ;
 
-	@Test
-	public void test() {
-		ClassNode cls = getClassNode(TestCls.class);
-		String code = cls.getCode().toString();
+            public static void mth() {
+            }
+        }
 
-		assertThat(code, containsLines(1, "public enum EmptyEnum {", "}"));
-		assertThat(code, containsLines(1,
-				"public enum EmptyEnum2 {",
-				indent(1) + ";",
-				"",
-				indent(1) + "public static void mth() {",
-				indent(1) + "}",
-				"}"));
+        public enum Direction {
+            NORTH,
+            SOUTH,
+            EAST,
+            WEST
+        }
 
-		assertThat(code, containsLines(1, "public enum Direction {",
-				indent(1) + "NORTH,",
-				indent(1) + "SOUTH,",
-				indent(1) + "EAST,",
-				indent(1) + "WEST",
-				"}"));
+        public enum Singleton {
+            INSTANCE;
 
-		assertThat(code, containsLines(1, "public enum Singleton {",
-				indent(1) + "INSTANCE;",
-				"",
-				indent(1) + "public String test() {",
-				indent(2) + "return \"\";",
-				indent(1) + "}",
-				"}"));
-	}
+            public String test() {
+                return "";
+            }
+        }
+    }
 }

@@ -5,24 +5,24 @@ import jadx.gui.JadxWrapper;
 
 public class DecompileJob extends BackgroundJob {
 
-	public DecompileJob(JadxWrapper wrapper, int threadsCount) {
-		super(wrapper, threadsCount);
-	}
+    public DecompileJob(JadxWrapper wrapper, int threadsCount) {
+        super(wrapper, threadsCount);
+    }
 
-	protected void runJob() {
-		for (final JavaClass cls : wrapper.getClasses()) {
-			addTask(new Runnable() {
-				@Override
-				public void run() {
-					cls.decompile();
-				}
-			});
-		}
-	}
+    protected void runJob() {
+        for (final JavaClass cls : wrapper.getClasses()) {
+            addTask(new Runnable() {
+                @Override
+                public void run() {
+                    cls.decompile();
+                }
+            });
+        }
+    }
 
-	@Override
-	public String getInfoString() {
-		return "Decompiling: ";
-	}
+    @Override
+    public String getInfoString() {
+        return "Decompiling: ";
+    }
 
 }

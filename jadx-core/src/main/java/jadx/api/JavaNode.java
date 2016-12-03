@@ -2,13 +2,13 @@ package jadx.api;
 
 public interface JavaNode {
 
-	String getName();
+    String getName();
 
-	String getFullName();
+    String getFullName();
 
-	JavaClass getDeclaringClass();
+    JavaClass getDeclaringClass();
 
-	JavaClass getTopParentClass();
+    JavaClass getTopParentClass();
 
-	int getDecompiledLine();
+    int getDecompiledLine();
 }

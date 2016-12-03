@@ -5,24 +5,24 @@ import jadx.core.dex.attributes.IAttribute;
 
 public class CatchAttr implements IAttribute {
 
-	private final TryCatchBlock tryBlock;
+    private final TryCatchBlock tryBlock;
 
-	public CatchAttr(TryCatchBlock block) {
-		this.tryBlock = block;
-	}
+    public CatchAttr(TryCatchBlock block) {
+        this.tryBlock = block;
+    }
 
-	@Override
-	public AType<CatchAttr> getType() {
-		return AType.CATCH_BLOCK;
-	}
+    @Override
+    public AType<CatchAttr> getType() {
+        return AType.CATCH_BLOCK;
+    }
 
-	public TryCatchBlock getTryBlock() {
-		return tryBlock;
-	}
+    public TryCatchBlock getTryBlock() {
+        return tryBlock;
+    }
 
-	@Override
-	public String toString() {
-		return tryBlock.toString();
-	}
+    @Override
+    public String toString() {
+        return tryBlock.toString();
+    }
 
 }

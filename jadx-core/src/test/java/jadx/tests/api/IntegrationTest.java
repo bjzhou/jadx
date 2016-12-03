@@ -1,5 +1,20 @@
 package jadx.tests.api;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.jar.JarOutputStream;
+
 import jadx.api.JadxArgs;
 import jadx.api.JadxDecompiler;
 import jadx.api.JadxInternalAccess;
@@ -19,21 +34,6 @@ import jadx.tests.api.compiler.DynamicCompiler;
 import jadx.tests.api.compiler.StaticCompiler;
 import jadx.tests.api.utils.TestUtils;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.jar.JarOutputStream;
-
 import static jadx.core.utils.files.FileUtils.addFileToJar;
 import static jadx.core.utils.files.FileUtils.close;
 import static org.hamcrest.Matchers.containsString;
@@ -48,344 +48,339 @@ import static org.junit.Assert.fail;
 
 public abstract class IntegrationTest extends TestUtils {
 
-	private static final String TEST_DIRECTORY = "src/test/java";
-	private static final String TEST_DIRECTORY2 = "jadx-core/" + TEST_DIRECTORY;
+    private static final String TEST_DIRECTORY = "src/test/java";
+    private static final String TEST_DIRECTORY2 = "jadx-core/" + TEST_DIRECTORY;
+    protected boolean deleteTmpFiles = true;
+    protected boolean withDebugInfo = true;
+    protected boolean unloadCls = true;
+    protected Map<Integer, String> resMap = Collections.emptyMap();
+    protected String outDir = "test-out-tmp";
+    protected boolean compile = true;
+    private JadxArgs args;
+    private DynamicCompiler dynamicCompiler;
 
-	private JadxArgs args;
+    public IntegrationTest() {
+        args = new JadxArgs();
+        args.setShowInconsistentCode(true);
+        args.setThreadsCount(1);
+        args.setSkipResources(true);
+    }
 
-	protected boolean deleteTmpFiles = true;
-	protected boolean withDebugInfo = true;
-	protected boolean unloadCls = true;
+    private static void checkCode(ClassNode cls) {
+        assertTrue("Inconsistent cls: " + cls,
+                !cls.contains(AFlag.INCONSISTENT_CODE) && !cls.contains(AType.JADX_ERROR));
+        for (MethodNode mthNode : cls.getMethods()) {
+            assertTrue("Inconsistent method: " + mthNode,
+                    !mthNode.contains(AFlag.INCONSISTENT_CODE) && !mthNode.contains(AType.JADX_ERROR));
+        }
+        assertThat(cls.getCode().toString(), not(containsString("inconsistent")));
+    }
 
-	protected Map<Integer, String> resMap = Collections.emptyMap();
+    private static File createTempDir(String prefix) throws IOException {
+        File baseDir = new File(System.getProperty("java.io.tmpdir"));
+        String baseName = prefix + "-" + System.nanoTime();
+        for (int counter = 1; counter < 1000; counter++) {
+            File tempDir = new File(baseDir, baseName + counter);
+            if (tempDir.mkdir()) {
+                return tempDir;
+            }
+        }
+        throw new IOException("Failed to create temp directory");
+    }
 
-	protected String outDir = "test-out-tmp";
+    public ClassNode getClassNode(Class<?> clazz) {
+        try {
+            File jar = getJarForClass(clazz);
+            return getClassNodeFromFile(jar, clazz.getName());
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail(e.getMessage());
+        }
+        return null;
+    }
 
-	protected boolean compile = true;
-	private DynamicCompiler dynamicCompiler;
+    public ClassNode getClassNodeFromFile(File file, String clsName) {
+        JadxDecompiler d = new JadxDecompiler(args);
+        try {
+            d.loadFile(file);
+        } catch (JadxException e) {
+            e.printStackTrace();
+            fail(e.getMessage());
+        }
+        RootNode root = JadxInternalAccess.getRoot(d);
+        root.getConstValues().getResourcesNames().putAll(resMap);
 
-	public IntegrationTest() {
-		args = new JadxArgs();
-		args.setShowInconsistentCode(true);
-		args.setThreadsCount(1);
-		args.setSkipResources(true);
-	}
+        ClassNode cls = root.searchClassByName(clsName);
+        assertThat("Class not found: " + clsName, cls, notNullValue());
+        assertThat(clsName, is(cls.getClassInfo().getFullName()));
 
-	public ClassNode getClassNode(Class<?> clazz) {
-		try {
-			File jar = getJarForClass(clazz);
-			return getClassNodeFromFile(jar, clazz.getName());
-		} catch (Exception e) {
-			e.printStackTrace();
-			fail(e.getMessage());
-		}
-		return null;
-	}
+        if (unloadCls) {
+            decompile(d, cls);
+        } else {
+            decompileWithoutUnload(d, cls);
+        }
 
-	public ClassNode getClassNodeFromFile(File file, String clsName) {
-		JadxDecompiler d = new JadxDecompiler(args);
-		try {
-			d.loadFile(file);
-		} catch (JadxException e) {
-			e.printStackTrace();
-			fail(e.getMessage());
-		}
-		RootNode root = JadxInternalAccess.getRoot(d);
-		root.getConstValues().getResourcesNames().putAll(resMap);
+        System.out.println("-----------------------------------------------------------");
+        System.out.println(cls.getCode());
+        System.out.println("-----------------------------------------------------------");
 
-		ClassNode cls = root.searchClassByName(clsName);
-		assertThat("Class not found: " + clsName, cls, notNullValue());
-		assertThat(clsName, is(cls.getClassInfo().getFullName()));
+        checkCode(cls);
+        compile(cls);
+        runAutoCheck(clsName);
+        return cls;
+    }
 
-		if (unloadCls) {
-			decompile(d, cls);
-		} else {
-			decompileWithoutUnload(d, cls);
-		}
+    private void decompile(JadxDecompiler jadx, ClassNode cls) {
+        List<IDexTreeVisitor> passes = Jadx.getPassesList(jadx.getArgs(), new File(outDir));
+        ProcessClass.process(cls, passes, new CodeGen(jadx.getArgs()));
+    }
 
-		System.out.println("-----------------------------------------------------------");
-		System.out.println(cls.getCode());
-		System.out.println("-----------------------------------------------------------");
+    private void decompileWithoutUnload(JadxDecompiler d, ClassNode cls) {
+        cls.load();
+        List<IDexTreeVisitor> passes = Jadx.getPassesList(d.getArgs(), new File(outDir));
+        for (IDexTreeVisitor visitor : passes) {
+            DepthTraversal.visit(visitor, cls);
+        }
+        try {
+            new CodeGen(d.getArgs()).visit(cls);
+        } catch (CodegenException e) {
+            e.printStackTrace();
+            fail(e.getMessage());
+        }
+        // don't unload class
+    }
 
-		checkCode(cls);
-		compile(cls);
-		runAutoCheck(clsName);
-		return cls;
-	}
+    private void runAutoCheck(String clsName) {
+        try {
+            // run 'check' method from original class
+            Class<?> origCls;
+            try {
+                origCls = Class.forName(clsName);
+            } catch (ClassNotFoundException e) {
+                // ignore
+                return;
+            }
+            Method checkMth;
+            try {
+                checkMth = origCls.getMethod("check");
+            } catch (NoSuchMethodException e) {
+                // ignore
+                return;
+            }
+            if (!checkMth.getReturnType().equals(void.class)
+                    || !Modifier.isPublic(checkMth.getModifiers())
+                    || Modifier.isStatic(checkMth.getModifiers())) {
+                fail("Wrong 'check' method");
+                return;
+            }
+            try {
+                checkMth.invoke(origCls.newInstance());
+            } catch (InvocationTargetException ie) {
+                rethrow("Java check failed", ie);
+            }
+            // run 'check' method from decompiled class
+            try {
+                invoke("check");
+            } catch (InvocationTargetException ie) {
+                rethrow("Decompiled check failed", ie);
+            }
+            System.out.println("Auto check: PASSED");
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("Auto check exception: " + e.getMessage());
+        }
+    }
 
-	private void decompile(JadxDecompiler jadx, ClassNode cls) {
-		List<IDexTreeVisitor> passes = Jadx.getPassesList(jadx.getArgs(), new File(outDir));
-		ProcessClass.process(cls, passes, new CodeGen(jadx.getArgs()));
-	}
+    private void rethrow(String msg, InvocationTargetException ie) {
+        Throwable cause = ie.getCause();
+        if (cause instanceof AssertionError) {
+            System.err.println(msg);
+            throw (AssertionError) cause;
+        } else {
+            cause.printStackTrace();
+            fail(msg + cause.getMessage());
+        }
+    }
 
-	private void decompileWithoutUnload(JadxDecompiler d, ClassNode cls) {
-		cls.load();
-		List<IDexTreeVisitor> passes = Jadx.getPassesList(d.getArgs(), new File(outDir));
-		for (IDexTreeVisitor visitor : passes) {
-			DepthTraversal.visit(visitor, cls);
-		}
-		try {
-			new CodeGen(d.getArgs()).visit(cls);
-		} catch (CodegenException e) {
-			e.printStackTrace();
-			fail(e.getMessage());
-		}
-		// don't unload class
-	}
+    protected MethodNode getMethod(ClassNode cls, String method) {
+        for (MethodNode mth : cls.getMethods()) {
+            if (mth.getName().equals(method)) {
+                return mth;
+            }
+        }
+        fail("Method not found " + method + " in class " + cls);
+        return null;
+    }
 
-	private static void checkCode(ClassNode cls) {
-		assertTrue("Inconsistent cls: " + cls,
-				!cls.contains(AFlag.INCONSISTENT_CODE) && !cls.contains(AType.JADX_ERROR));
-		for (MethodNode mthNode : cls.getMethods()) {
-			assertTrue("Inconsistent method: " + mthNode,
-					!mthNode.contains(AFlag.INCONSISTENT_CODE) && !mthNode.contains(AType.JADX_ERROR));
-		}
-		assertThat(cls.getCode().toString(), not(containsString("inconsistent")));
-	}
+    void compile(ClassNode cls) {
+        if (!compile) {
+            return;
+        }
+        try {
+            dynamicCompiler = new DynamicCompiler(cls);
+            boolean result = dynamicCompiler.compile();
+            assertTrue("Compilation failed", result);
+            System.out.println("Compilation: PASSED");
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail(e.getMessage());
+        }
+    }
 
-	private void runAutoCheck(String clsName) {
-		try {
-			// run 'check' method from original class
-			Class<?> origCls;
-			try {
-				origCls = Class.forName(clsName);
-			} catch (ClassNotFoundException e) {
-				// ignore
-				return;
-			}
-			Method checkMth;
-			try {
-				checkMth = origCls.getMethod("check");
-			} catch (NoSuchMethodException e) {
-				// ignore
-				return;
-			}
-			if (!checkMth.getReturnType().equals(void.class)
-					|| !Modifier.isPublic(checkMth.getModifiers())
-					|| Modifier.isStatic(checkMth.getModifiers())) {
-				fail("Wrong 'check' method");
-				return;
-			}
-			try {
-				checkMth.invoke(origCls.newInstance());
-			} catch (InvocationTargetException ie) {
-				rethrow("Java check failed", ie);
-			}
-			// run 'check' method from decompiled class
-			try {
-				invoke("check");
-			} catch (InvocationTargetException ie) {
-				rethrow("Decompiled check failed", ie);
-			}
-			System.out.println("Auto check: PASSED");
-		} catch (Exception e) {
-			e.printStackTrace();
-			fail("Auto check exception: " + e.getMessage());
-		}
-	}
+    public Object invoke(String method) throws Exception {
+        return invoke(method, new Class<?>[0]);
+    }
 
-	private void rethrow(String msg, InvocationTargetException ie) {
-		Throwable cause = ie.getCause();
-		if (cause instanceof AssertionError) {
-			System.err.println(msg);
-			throw (AssertionError) cause;
-		} else {
-			cause.printStackTrace();
-			fail(msg + cause.getMessage());
-		}
-	}
+    public Object invoke(String method, Class<?>[] types, Object... args) throws Exception {
+        Method mth = getReflectMethod(method, types);
+        return invoke(mth, args);
+    }
 
-	protected MethodNode getMethod(ClassNode cls, String method) {
-		for (MethodNode mth : cls.getMethods()) {
-			if (mth.getName().equals(method)) {
-				return mth;
-			}
-		}
-		fail("Method not found " + method + " in class " + cls);
-		return null;
-	}
+    public Method getReflectMethod(String method, Class<?>... types) {
+        assertNotNull("dynamicCompiler not ready", dynamicCompiler);
+        try {
+            return dynamicCompiler.getMethod(method, types);
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail(e.getMessage());
+        }
+        return null;
+    }
 
-	void compile(ClassNode cls) {
-		if (!compile) {
-			return;
-		}
-		try {
-			dynamicCompiler = new DynamicCompiler(cls);
-			boolean result = dynamicCompiler.compile();
-			assertTrue("Compilation failed", result);
-			System.out.println("Compilation: PASSED");
-		} catch (Exception e) {
-			e.printStackTrace();
-			fail(e.getMessage());
-		}
-	}
+    public Object invoke(Method mth, Object... args) throws Exception {
+        assertNotNull("dynamicCompiler not ready", dynamicCompiler);
+        assertNotNull("unknown method", mth);
+        return dynamicCompiler.invoke(mth, args);
+    }
 
-	public Object invoke(String method) throws Exception {
-		return invoke(method, new Class<?>[0]);
-	}
+    public File getJarForClass(Class<?> cls) throws IOException {
+        String path = cls.getPackage().getName().replace('.', '/');
+        List<File> list;
+        if (!withDebugInfo) {
+            list = compileClass(cls);
+        } else {
+            list = getClassFilesWithInners(cls);
+            if (list.isEmpty()) {
+                list = compileClass(cls);
+            }
+        }
+        assertThat("File list is empty", list, not(empty()));
 
-	public Object invoke(String method, Class<?>[] types, Object... args) throws Exception {
-		Method mth = getReflectMethod(method, types);
-		return invoke(mth, args);
-	}
+        File temp = createTempFile(".jar");
+        JarOutputStream jo = new JarOutputStream(new FileOutputStream(temp));
+        for (File file : list) {
+            addFileToJar(jo, file, path + "/" + file.getName());
+        }
+        close(jo);
+        return temp;
+    }
 
-	public Method getReflectMethod(String method, Class<?>... types) {
-		assertNotNull("dynamicCompiler not ready", dynamicCompiler);
-		try {
-			return dynamicCompiler.getMethod(method, types);
-		} catch (Exception e) {
-			e.printStackTrace();
-			fail(e.getMessage());
-		}
-		return null;
-	}
+    protected File createTempFile(String suffix) {
+        File temp = null;
+        try {
+            temp = File.createTempFile("jadx-tmp-", System.nanoTime() + suffix);
+            if (deleteTmpFiles) {
+                temp.deleteOnExit();
+            } else {
+                System.out.println("Temporary file path: " + temp.getAbsolutePath());
+            }
+        } catch (IOException e) {
+            fail(e.getMessage());
+        }
+        return temp;
+    }
 
-	public Object invoke(Method mth, Object... args) throws Exception {
-		assertNotNull("dynamicCompiler not ready", dynamicCompiler);
-		assertNotNull("unknown method", mth);
-		return dynamicCompiler.invoke(mth, args);
-	}
+    private List<File> getClassFilesWithInners(Class<?> cls) {
+        List<File> list = new ArrayList<File>();
+        String pkgName = cls.getPackage().getName();
+        URL pkgResource = ClassLoader.getSystemClassLoader().getResource(pkgName.replace('.', '/'));
+        if (pkgResource != null) {
+            try {
+                String clsName = cls.getName();
+                File directory = new File(pkgResource.toURI());
+                String[] files = directory.list();
+                for (String file : files) {
+                    String fullName = pkgName + "." + file;
+                    if (fullName.startsWith(clsName)) {
+                        list.add(new File(directory, file));
+                    }
+                }
+            } catch (URISyntaxException e) {
+                fail(e.getMessage());
+            }
+        }
+        return list;
+    }
 
-	public File getJarForClass(Class<?> cls) throws IOException {
-		String path = cls.getPackage().getName().replace('.', '/');
-		List<File> list;
-		if (!withDebugInfo) {
-			list = compileClass(cls);
-		} else {
-			list = getClassFilesWithInners(cls);
-			if (list.isEmpty()) {
-				list = compileClass(cls);
-			}
-		}
-		assertThat("File list is empty", list, not(empty()));
+    private List<File> compileClass(Class<?> cls) throws IOException {
+        String fileName = cls.getName();
+        int end = fileName.indexOf('$');
+        if (end != -1) {
+            fileName = fileName.substring(0, end);
+        }
+        fileName = fileName.replace('.', '/') + ".java";
+        File file = new File(TEST_DIRECTORY, fileName);
+        if (!file.exists()) {
+            file = new File(TEST_DIRECTORY2, fileName);
+        }
+        assertThat("Test source file not found: " + fileName, file.exists(), is(true));
+        List<File> compileFileList = Collections.singletonList(file);
 
-		File temp = createTempFile(".jar");
-		JarOutputStream jo = new JarOutputStream(new FileOutputStream(temp));
-		for (File file : list) {
-			addFileToJar(jo, file, path + "/" + file.getName());
-		}
-		close(jo);
-		return temp;
-	}
+        File outTmp = createTempDir("jadx-tmp-classes");
+        outTmp.deleteOnExit();
+        List<File> files = StaticCompiler.compile(compileFileList, outTmp, withDebugInfo);
+        // remove classes which are parents for test class
+        Iterator<File> iterator = files.iterator();
+        while (iterator.hasNext()) {
+            File next = iterator.next();
+            if (!next.getName().contains(cls.getSimpleName())) {
+                iterator.remove();
+            }
+        }
+        for (File clsFile : files) {
+            clsFile.deleteOnExit();
+        }
+        return files;
+    }
 
-	protected File createTempFile(String suffix) {
-		File temp = null;
-		try {
-			temp = File.createTempFile("jadx-tmp-", System.nanoTime() + suffix);
-			if (deleteTmpFiles) {
-				temp.deleteOnExit();
-			} else {
-				System.out.println("Temporary file path: " + temp.getAbsolutePath());
-			}
-		} catch (IOException e) {
-			fail(e.getMessage());
-		}
-		return temp;
-	}
+    public JadxArgs getArgs() {
+        return args;
+    }
 
-	private static File createTempDir(String prefix) throws IOException {
-		File baseDir = new File(System.getProperty("java.io.tmpdir"));
-		String baseName = prefix + "-" + System.nanoTime();
-		for (int counter = 1; counter < 1000; counter++) {
-			File tempDir = new File(baseDir, baseName + counter);
-			if (tempDir.mkdir()) {
-				return tempDir;
-			}
-		}
-		throw new IOException("Failed to create temp directory");
-	}
+    public void setArgs(JadxArgs args) {
+        this.args = args;
+    }
 
-	private List<File> getClassFilesWithInners(Class<?> cls) {
-		List<File> list = new ArrayList<File>();
-		String pkgName = cls.getPackage().getName();
-		URL pkgResource = ClassLoader.getSystemClassLoader().getResource(pkgName.replace('.', '/'));
-		if (pkgResource != null) {
-			try {
-				String clsName = cls.getName();
-				File directory = new File(pkgResource.toURI());
-				String[] files = directory.list();
-				for (String file : files) {
-					String fullName = pkgName + "." + file;
-					if (fullName.startsWith(clsName)) {
-						list.add(new File(directory, file));
-					}
-				}
-			} catch (URISyntaxException e) {
-				fail(e.getMessage());
-			}
-		}
-		return list;
-	}
+    public void setResMap(Map<Integer, String> resMap) {
+        this.resMap = resMap;
+    }
 
-	private List<File> compileClass(Class<?> cls) throws IOException {
-		String fileName = cls.getName();
-		int end = fileName.indexOf('$');
-		if (end != -1) {
-			fileName = fileName.substring(0, end);
-		}
-		fileName = fileName.replace('.', '/') + ".java";
-		File file = new File(TEST_DIRECTORY, fileName);
-		if (!file.exists()) {
-			file = new File(TEST_DIRECTORY2, fileName);
-		}
-		assertThat("Test source file not found: " + fileName, file.exists(), is(true));
-		List<File> compileFileList = Collections.singletonList(file);
+    protected void noDebugInfo() {
+        this.withDebugInfo = false;
+    }
 
-		File outTmp = createTempDir("jadx-tmp-classes");
-		outTmp.deleteOnExit();
-		List<File> files = StaticCompiler.compile(compileFileList, outTmp, withDebugInfo);
-		// remove classes which are parents for test class
-		Iterator<File> iterator = files.iterator();
-		while (iterator.hasNext()) {
-			File next = iterator.next();
-			if (!next.getName().contains(cls.getSimpleName())) {
-				iterator.remove();
-			}
-		}
-		for (File clsFile : files) {
-			clsFile.deleteOnExit();
-		}
-		return files;
-	}
+    protected void setFallback() {
+        this.args.setFallbackMode(true);
+    }
 
-	public JadxArgs getArgs() {
-		return args;
-	}
+    protected void disableCompilation() {
+        this.compile = false;
+    }
 
-	public void setArgs(JadxArgs args) {
-		this.args = args;
-	}
+    protected void dontUnloadClass() {
+        this.unloadCls = false;
+    }
 
-	public void setResMap(Map<Integer, String> resMap) {
-		this.resMap = resMap;
-	}
+    // Use only for debug purpose
+    @Deprecated
+    protected void setOutputCFG() {
+        this.args.setCfgOutput(true);
+        this.args.setRawCFGOutput(true);
+    }
 
-	protected void noDebugInfo() {
-		this.withDebugInfo = false;
-	}
-
-	protected void setFallback() {
-		this.args.setFallbackMode(true);
-	}
-
-	protected void disableCompilation() {
-		this.compile = false;
-	}
-
-	protected void dontUnloadClass() {
-		this.unloadCls = false;
-	}
-
-	// Use only for debug purpose
-	@Deprecated
-	protected void setOutputCFG() {
-		this.args.setCfgOutput(true);
-		this.args.setRawCFGOutput(true);
-	}
-
-	// Use only for debug purpose
-	@Deprecated
-	protected void notDeleteTmpJar() {
-		this.deleteTmpFiles = false;
-	}
+    // Use only for debug purpose
+    @Deprecated
+    protected void notDeleteTmpJar() {
+        this.deleteTmpFiles = false;
+    }
 }

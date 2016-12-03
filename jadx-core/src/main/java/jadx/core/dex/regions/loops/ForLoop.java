@@ -4,19 +4,19 @@ import jadx.core.dex.nodes.InsnNode;
 
 public final class ForLoop extends LoopType {
 
-	private final InsnNode initInsn;
-	private final InsnNode incrInsn;
+    private final InsnNode initInsn;
+    private final InsnNode incrInsn;
 
-	public ForLoop(InsnNode initInsn, InsnNode incrInsn) {
-		this.initInsn = initInsn;
-		this.incrInsn = incrInsn;
-	}
+    public ForLoop(InsnNode initInsn, InsnNode incrInsn) {
+        this.initInsn = initInsn;
+        this.incrInsn = incrInsn;
+    }
 
-	public InsnNode getInitInsn() {
-		return initInsn;
-	}
+    public InsnNode getInitInsn() {
+        return initInsn;
+    }
 
-	public InsnNode getIncrInsn() {
-		return incrInsn;
-	}
+    public InsnNode getIncrInsn() {
+        return incrInsn;
+    }
 }

@@ -1,46 +1,46 @@
 package jadx.tests.integration.inner;
 
+import org.junit.Test;
+
 import jadx.core.dex.nodes.ClassNode;
 import jadx.tests.api.IntegrationTest;
-
-import org.junit.Test;
 
 import static jadx.tests.api.utils.JadxMatchers.containsOne;
 import static org.junit.Assert.assertThat;
 
 public class TestAnonymousClass12 extends IntegrationTest {
 
-	public static class TestCls {
+    @Test
+    public void test() {
+        ClassNode cls = getClassNode(TestCls.class);
+        String code = cls.getCode().toString();
 
-		public abstract static class BasicAbstract {
-			public abstract void doSomething();
-		}
+        assertThat(code, containsOne("outer = new BasicAbstract() {"));
+        assertThat(code, containsOne("inner = new BasicAbstract() {"));
+        assertThat(code, containsOne("inner = null;"));
+    }
 
-		private BasicAbstract outer;
-		private BasicAbstract inner;
+    public static class TestCls {
 
-		public void test() {
-			outer = new BasicAbstract() {
-				@Override
-				public void doSomething() {
-					inner = new BasicAbstract() {
-						@Override
-						public void doSomething() {
-							inner = null;
-						}
-					};
-				}
-			};
-		}
-	}
+        private BasicAbstract outer;
+        private BasicAbstract inner;
 
-	@Test
-	public void test() {
-		ClassNode cls = getClassNode(TestCls.class);
-		String code = cls.getCode().toString();
+        public void test() {
+            outer = new BasicAbstract() {
+                @Override
+                public void doSomething() {
+                    inner = new BasicAbstract() {
+                        @Override
+                        public void doSomething() {
+                            inner = null;
+                        }
+                    };
+                }
+            };
+        }
 
-		assertThat(code, containsOne("outer = new BasicAbstract() {"));
-		assertThat(code, containsOne("inner = new BasicAbstract() {"));
-		assertThat(code, containsOne("inner = null;"));
-	}
+        public abstract static class BasicAbstract {
+            public abstract void doSomething();
+        }
+    }
 }

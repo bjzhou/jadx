@@ -2,35 +2,35 @@ package jadx.samples;
 
 public class TestInnerNames extends AbstractTest {
 
-	public int D;
+    public int D;
 
-	public class A extends TestInner.MyThread {
-		public A(String name) {
-			super(name);
-		}
-	}
+    public static void main(String[] args) throws Exception {
+        new TestInnerNames().testRun();
+    }
 
-	public class B extends A {
-		public B(String name) {
-			super(name);
-		}
+    @Override
+    public boolean testRun() throws Exception {
+        return true;
+    }
 
-		public class C extends TestInner2.B {
-		}
-	}
+    public class A extends TestInner.MyThread {
+        public A(String name) {
+            super(name);
+        }
+    }
 
-	public class C extends TestInner2.B {
-	}
+    public class B extends A {
+        public B(String name) {
+            super(name);
+        }
 
-	public class D extends TestInner2.D {
-	}
+        public class C extends TestInner2.B {
+        }
+    }
 
-	@Override
-	public boolean testRun() throws Exception {
-		return true;
-	}
+    public class C extends TestInner2.B {
+    }
 
-	public static void main(String[] args) throws Exception {
-		new TestInnerNames().testRun();
-	}
+    public class D extends TestInner2.D {
+    }
 }

@@ -1,37 +1,37 @@
 package jadx.tests.integration.names;
 
+import org.junit.Test;
+
 import jadx.core.dex.nodes.ClassNode;
 import jadx.tests.api.IntegrationTest;
-
-import org.junit.Test;
 
 import static jadx.tests.api.utils.JadxMatchers.containsOne;
 import static org.junit.Assert.assertThat;
 
 public class TestSameMethodsNames extends IntegrationTest {
 
-	public static class TestCls<V> {
+    @Test
+    public void test() {
+        ClassNode cls = getClassNode(TestCls.class);
+        String code = cls.getCode().toString();
 
-		public static void test() {
-			new Bug().Bug();
-		}
+        assertThat(code, containsOne("new Bug().Bug();"));
+    }
 
-		public static class Bug {
-			public Bug() {
-				System.out.println("constructor");
-			}
+    public static class TestCls<V> {
 
-			void Bug() {
-				System.out.println("Bug");
-			}
-		}
-	}
+        public static void test() {
+            new Bug().Bug();
+        }
 
-	@Test
-	public void test() {
-		ClassNode cls = getClassNode(TestCls.class);
-		String code = cls.getCode().toString();
+        public static class Bug {
+            public Bug() {
+                System.out.println("constructor");
+            }
 
-		assertThat(code, containsOne("new Bug().Bug();"));
-	}
+            void Bug() {
+                System.out.println("Bug");
+            }
+        }
+    }
 }

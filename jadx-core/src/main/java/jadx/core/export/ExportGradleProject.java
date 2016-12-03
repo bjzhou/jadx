@@ -19,81 +19,81 @@ import jadx.core.utils.files.FileUtils;
 
 public class ExportGradleProject {
 
-	private static final Logger LOG = LoggerFactory.getLogger(ExportGradleProject.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ExportGradleProject.class);
 
-	private static final Set<String> IGNORE_CLS_NAMES = new HashSet<String>(Arrays.asList(
-			"R",
-			"BuildConfig"
-	));
+    private static final Set<String> IGNORE_CLS_NAMES = new HashSet<String>(Arrays.asList(
+            "R",
+            "BuildConfig"
+    ));
 
-	private final RootNode root;
-	private final File outDir;
-	private File srcOutDir;
-	private File resOutDir;
-	private File assetsOutDir;
-	private File jniLibsOutDir;
+    private final RootNode root;
+    private final File outDir;
+    private File srcOutDir;
+    private File resOutDir;
+    private File assetsOutDir;
+    private File jniLibsOutDir;
 
-	public ExportGradleProject(RootNode root, File outDir) {
-		this.root = root;
-		this.outDir = outDir;
-		this.srcOutDir = new File(outDir, "src/main/java");
-		this.resOutDir = new File(outDir, "src/main");
-		this.assetsOutDir = new File(outDir, "src/main/assets");
-		this.jniLibsOutDir = new File(outDir, "src/main/jniLibs");
-	}
+    public ExportGradleProject(RootNode root, File outDir) {
+        this.root = root;
+        this.outDir = outDir;
+        this.srcOutDir = new File(outDir, "src/main/java");
+        this.resOutDir = new File(outDir, "src/main");
+        this.assetsOutDir = new File(outDir, "src/main/assets");
+        this.jniLibsOutDir = new File(outDir, "src/main/jniLibs");
+    }
 
-	public void init() {
-		try {
-			FileUtils.makeDirsForFile(srcOutDir);
-			FileUtils.makeDirsForFile(resOutDir);
-			FileUtils.makeDirsForFile(assetsOutDir);
-			FileUtils.makeDirsForFile(jniLibsOutDir);
-			saveBuildGradle();
-			skipGeneratedClasses();
-		} catch (Exception e) {
-			throw new JadxRuntimeException("Gradle export failed", e);
-		}
-	}
+    public void init() {
+        try {
+            FileUtils.makeDirsForFile(srcOutDir);
+            FileUtils.makeDirsForFile(resOutDir);
+            FileUtils.makeDirsForFile(assetsOutDir);
+            FileUtils.makeDirsForFile(jniLibsOutDir);
+            saveBuildGradle();
+            skipGeneratedClasses();
+        } catch (Exception e) {
+            throw new JadxRuntimeException("Gradle export failed", e);
+        }
+    }
 
-	private void saveBuildGradle() throws IOException {
-		TemplateFile tmpl = TemplateFile.fromResources("/export/build.gradle.tmpl");
-		String appPackage = root.getAppPackage();
-		if (appPackage == null) {
-			appPackage = "UNKNOWN";
-		}
-		tmpl.add("applicationId", appPackage);
-		// TODO: load from AndroidManifest.xml
-		tmpl.add("minSdkVersion", 9);
-		tmpl.add("targetSdkVersion", 21);
-		tmpl.save(new File(outDir, "build.gradle"));
-	}
+    private void saveBuildGradle() throws IOException {
+        TemplateFile tmpl = TemplateFile.fromResources("/export/build.gradle.tmpl");
+        String appPackage = root.getAppPackage();
+        if (appPackage == null) {
+            appPackage = "UNKNOWN";
+        }
+        tmpl.add("applicationId", appPackage);
+        // TODO: load from AndroidManifest.xml
+        tmpl.add("minSdkVersion", 9);
+        tmpl.add("targetSdkVersion", 21);
+        tmpl.save(new File(outDir, "build.gradle"));
+    }
 
-	private void skipGeneratedClasses() {
-		for (DexNode dexNode : root.getDexNodes()) {
-			List<ClassNode> classes = dexNode.getClasses();
-			for (ClassNode cls : classes) {
-				String shortName = cls.getClassInfo().getShortName();
-				if (IGNORE_CLS_NAMES.contains(shortName)) {
-					cls.add(AFlag.DONT_GENERATE);
-					LOG.debug("Skip class: {}", cls);
-				}
-			}
-		}
-	}
+    private void skipGeneratedClasses() {
+        for (DexNode dexNode : root.getDexNodes()) {
+            List<ClassNode> classes = dexNode.getClasses();
+            for (ClassNode cls : classes) {
+                String shortName = cls.getClassInfo().getShortName();
+                if (IGNORE_CLS_NAMES.contains(shortName)) {
+                    cls.add(AFlag.DONT_GENERATE);
+                    LOG.debug("Skip class: {}", cls);
+                }
+            }
+        }
+    }
 
-	public File getSrcOutDir() {
-		return srcOutDir;
-	}
+    public File getSrcOutDir() {
+        return srcOutDir;
+    }
 
-	public File getResOutDir() {
-		return resOutDir;
-	}
+    public File getResOutDir() {
+        return resOutDir;
+    }
 
-	public File getAssetsOutDir() {
-		return assetsOutDir;
-	}
+    public File getAssetsOutDir() {
+        return assetsOutDir;
+    }
 
-	public File getJniLibsOutDir() {
-		return jniLibsOutDir;
-	}
+    public File getJniLibsOutDir() {
+        return jniLibsOutDir;
+    }
 }

@@ -1,69 +1,69 @@
 package jadx.tests.integration.invoke;
 
-import jadx.core.dex.nodes.ClassNode;
-import jadx.tests.api.IntegrationTest;
+import org.junit.Test;
 
 import java.io.IOException;
 
-import org.junit.Test;
+import jadx.core.dex.nodes.ClassNode;
+import jadx.tests.api.IntegrationTest;
 
 import static jadx.tests.api.utils.JadxMatchers.containsOne;
 import static org.junit.Assert.assertThat;
 
 public class TestInvoke1 extends IntegrationTest {
 
-	public static class TestCls {
+    @Test
+    public void test() {
+        ClassNode cls = getClassNode(TestCls.class);
+        String code = cls.getCode().toString();
 
-		private A is;
+        assertThat(code, containsOne("C pkg = new C(id, name, types, keys);"));
+    }
 
-		private C test(int start) throws IOException {
-			int id = is.readInt32();
-			String name = is.readString16Fixed(128);
+    public static class TestCls {
 
-			long typeStringsOffset = start + is.readInt32();
-			long keyStringsOffset = start + is.readInt32();
+        private A is;
 
-			String[] types = null;
-			if (typeStringsOffset != 0) {
-				types = strs();
-			}
-			String[] keys = null;
-			if (keyStringsOffset != 0) {
-				keys = strs();
-			}
+        private C test(int start) throws IOException {
+            int id = is.readInt32();
+            String name = is.readString16Fixed(128);
 
-			C pkg = new C(id, name, types, keys);
-			if (id == 0x7F) {
-				is.readInt32();
-			}
-			return pkg;
-		}
+            long typeStringsOffset = start + is.readInt32();
+            long keyStringsOffset = start + is.readInt32();
 
-		private String[] strs() {
-			return new String[0];
-		}
+            String[] types = null;
+            if (typeStringsOffset != 0) {
+                types = strs();
+            }
+            String[] keys = null;
+            if (keyStringsOffset != 0) {
+                keys = strs();
+            }
 
-		private static final class C {
-			public C(int id, String name, String[] types, String[] keys) {
-			}
-		}
+            C pkg = new C(id, name, types, keys);
+            if (id == 0x7F) {
+                is.readInt32();
+            }
+            return pkg;
+        }
 
-		private final class A {
-			public int readInt32() {
-				return 0;
-			}
+        private String[] strs() {
+            return new String[0];
+        }
 
-			public String readString16Fixed(int i) {
-				return null;
-			}
-		}
-	}
+        private static final class C {
+            public C(int id, String name, String[] types, String[] keys) {
+            }
+        }
 
-	@Test
-	public void test() {
-		ClassNode cls = getClassNode(TestCls.class);
-		String code = cls.getCode().toString();
+        private final class A {
+            public int readInt32() {
+                return 0;
+            }
 
-		assertThat(code, containsOne("C pkg = new C(id, name, types, keys);"));
-	}
+            public String readString16Fixed(int i) {
+                return null;
+            }
+        }
+    }
 }

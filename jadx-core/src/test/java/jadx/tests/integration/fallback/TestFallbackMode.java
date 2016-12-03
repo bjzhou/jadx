@@ -1,9 +1,9 @@
 package jadx.tests.integration.fallback;
 
+import org.junit.Test;
+
 import jadx.core.dex.nodes.ClassNode;
 import jadx.tests.api.IntegrationTest;
-
-import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.not;
@@ -11,27 +11,27 @@ import static org.junit.Assert.assertThat;
 
 public class TestFallbackMode extends IntegrationTest {
 
-	public static class TestCls {
+    @Test
+    public void test() {
+        setFallback();
+        disableCompilation();
 
-		public int test(int a) {
-			while (a < 10) {
-				a++;
-			}
-			return a;
-		}
-	}
+        ClassNode cls = getClassNode(TestCls.class);
+        String code = cls.getCode().toString();
 
-	@Test
-	public void test() {
-		setFallback();
-		disableCompilation();
+        assertThat(code, containsString("public int test(int r2) {"));
+        assertThat(code, containsString("r1 = this;"));
+        assertThat(code, containsString("L_0x0004:"));
+        assertThat(code, not(containsString("throw new UnsupportedOperationException")));
+    }
 
-		ClassNode cls = getClassNode(TestCls.class);
-		String code = cls.getCode().toString();
+    public static class TestCls {
 
-		assertThat(code, containsString("public int test(int r2) {"));
-		assertThat(code, containsString("r1 = this;"));
-		assertThat(code, containsString("L_0x0004:"));
-		assertThat(code, not(containsString("throw new UnsupportedOperationException")));
-	}
+        public int test(int a) {
+            while (a < 10) {
+                a++;
+            }
+            return a;
+        }
+    }
 }

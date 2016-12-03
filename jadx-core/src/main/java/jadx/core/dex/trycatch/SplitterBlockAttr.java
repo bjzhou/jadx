@@ -6,24 +6,24 @@ import jadx.core.dex.nodes.BlockNode;
 
 public class SplitterBlockAttr implements IAttribute {
 
-	private final BlockNode block;
+    private final BlockNode block;
 
-	public SplitterBlockAttr(BlockNode block) {
-		this.block = block;
-	}
+    public SplitterBlockAttr(BlockNode block) {
+        this.block = block;
+    }
 
-	public BlockNode getBlock() {
-		return block;
-	}
+    public BlockNode getBlock() {
+        return block;
+    }
 
-	@Override
-	public AType<SplitterBlockAttr> getType() {
-		return AType.SPLITTER_BLOCK;
-	}
+    @Override
+    public AType<SplitterBlockAttr> getType() {
+        return AType.SPLITTER_BLOCK;
+    }
 
-	@Override
-	public String toString() {
-		return "Splitter: " + block;
-	}
+    @Override
+    public String toString() {
+        return "Splitter: " + block;
+    }
 
 }

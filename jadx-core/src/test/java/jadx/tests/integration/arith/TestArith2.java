@@ -9,26 +9,26 @@ import static org.junit.Assert.assertThat;
 
 public class TestArith2 extends IntegrationTest {
 
-	public static class TestCls {
+    //	@Test
+    public void test() {
+        ClassNode cls = getClassNode(TestCls.class);
+        String code = cls.getCode().toString();
 
-		public int test1(int a) {
-			return (a + 2) * 3;
-		}
+        assertThat(code, containsString("return (a + 2) * 3;"));
+        assertThat(code, not(containsString("a + 2 * 3")));
 
-		public int test2(int a, int b, int c) {
-			return a + b + c;
-		}
-	}
+        assertThat(code, containsString("return a + b + c;"));
+        assertThat(code, not(containsString("return (a + b) + c;")));
+    }
 
-	//	@Test
-	public void test() {
-		ClassNode cls = getClassNode(TestCls.class);
-		String code = cls.getCode().toString();
+    public static class TestCls {
 
-		assertThat(code, containsString("return (a + 2) * 3;"));
-		assertThat(code, not(containsString("a + 2 * 3")));
+        public int test1(int a) {
+            return (a + 2) * 3;
+        }
 
-		assertThat(code, containsString("return a + b + c;"));
-		assertThat(code, not(containsString("return (a + b) + c;")));
-	}
+        public int test2(int a, int b, int c) {
+            return a + b + c;
+        }
+    }
 }

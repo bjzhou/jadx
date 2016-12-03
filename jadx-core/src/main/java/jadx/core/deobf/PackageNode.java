@@ -7,124 +7,122 @@ import java.util.Stack;
 
 public class PackageNode {
 
-	private static final char SEPARATOR_CHAR = '.';
+    private static final char SEPARATOR_CHAR = '.';
+    private final String packageName;
+    private PackageNode parentPackage;
+    private List<PackageNode> innerPackages = Collections.emptyList();
+    private String packageAlias;
 
-	private PackageNode parentPackage;
-	private List<PackageNode> innerPackages = Collections.emptyList();
+    private String cachedPackageFullName;
+    private String cachedPackageFullAlias;
 
-	private final String packageName;
-	private String packageAlias;
+    public PackageNode(String packageName) {
+        this.packageName = packageName;
+        this.parentPackage = this;
+    }
 
-	private String cachedPackageFullName;
-	private String cachedPackageFullAlias;
+    public String getName() {
+        return packageName;
+    }
 
-	public PackageNode(String packageName) {
-		this.packageName = packageName;
-		this.parentPackage = this;
-	}
+    public String getFullName() {
+        if (cachedPackageFullName == null) {
+            Stack<PackageNode> pp = getParentPackages();
 
-	public String getName() {
-		return packageName;
-	}
+            StringBuilder result = new StringBuilder();
+            result.append(pp.pop().getName());
+            while (pp.size() > 0) {
+                result.append(SEPARATOR_CHAR);
+                result.append(pp.pop().getName());
+            }
+            cachedPackageFullName = result.toString();
+        }
+        return cachedPackageFullName;
+    }
 
-	public String getFullName() {
-		if (cachedPackageFullName == null) {
-			Stack<PackageNode> pp = getParentPackages();
+    public String getAlias() {
+        if (packageAlias != null) {
+            return packageAlias;
+        }
+        return packageName;
+    }
 
-			StringBuilder result = new StringBuilder();
-			result.append(pp.pop().getName());
-			while (pp.size() > 0) {
-				result.append(SEPARATOR_CHAR);
-				result.append(pp.pop().getName());
-			}
-			cachedPackageFullName = result.toString();
-		}
-		return cachedPackageFullName;
-	}
+    public void setAlias(String alias) {
+        packageAlias = alias;
+    }
 
-	public String getAlias() {
-		if (packageAlias != null) {
-			return packageAlias;
-		}
-		return packageName;
-	}
+    public boolean hasAlias() {
+        return packageAlias != null;
+    }
 
-	public void setAlias(String alias) {
-		packageAlias = alias;
-	}
+    public String getFullAlias() {
+        if (cachedPackageFullAlias == null) {
+            Stack<PackageNode> pp = getParentPackages();
+            StringBuilder result = new StringBuilder();
 
-	public boolean hasAlias() {
-		return packageAlias != null;
-	}
+            if (pp.size() > 0) {
+                result.append(pp.pop().getAlias());
+                while (pp.size() > 0) {
+                    result.append(SEPARATOR_CHAR);
+                    result.append(pp.pop().getAlias());
+                }
+            } else {
+                result.append(this.getAlias());
+            }
+            cachedPackageFullAlias = result.toString();
+        }
+        return cachedPackageFullAlias;
+    }
 
-	public String getFullAlias() {
-		if (cachedPackageFullAlias == null) {
-			Stack<PackageNode> pp = getParentPackages();
-			StringBuilder result = new StringBuilder();
+    public PackageNode getParentPackage() {
+        return parentPackage;
+    }
 
-			if (pp.size() > 0) {
-				result.append(pp.pop().getAlias());
-				while (pp.size() > 0) {
-					result.append(SEPARATOR_CHAR);
-					result.append(pp.pop().getAlias());
-				}
-			} else {
-				result.append(this.getAlias());
-			}
-			cachedPackageFullAlias = result.toString();
-		}
-		return cachedPackageFullAlias;
-	}
+    public List<PackageNode> getInnerPackages() {
+        return innerPackages;
+    }
 
-	public PackageNode getParentPackage() {
-		return parentPackage;
-	}
+    public void addInnerPackage(PackageNode pkg) {
+        if (innerPackages.isEmpty()) {
+            innerPackages = new ArrayList<PackageNode>();
+        }
+        innerPackages.add(pkg);
+        pkg.parentPackage = this;
+    }
 
-	public List<PackageNode> getInnerPackages() {
-		return innerPackages;
-	}
+    /**
+     * Gets inner package node by name
+     *
+     * @param name inner package name
+     * @return package node or {@code null}
+     */
+    public PackageNode getInnerPackageByName(String name) {
+        PackageNode result = null;
+        for (PackageNode p : innerPackages) {
+            if (p.getName().equals(name)) {
+                result = p;
+                break;
+            }
+        }
+        return result;
+    }
 
-	public void addInnerPackage(PackageNode pkg) {
-		if (innerPackages.isEmpty()) {
-			innerPackages = new ArrayList<PackageNode>();
-		}
-		innerPackages.add(pkg);
-		pkg.parentPackage = this;
-	}
+    /**
+     * Fills stack with parent packages exclude root node
+     *
+     * @return stack with parent packages
+     */
+    private Stack<PackageNode> getParentPackages() {
+        Stack<PackageNode> pp = new Stack<PackageNode>();
 
-	/**
-	 * Gets inner package node by name
-	 *
-	 * @param name inner package name
-	 * @return package node or {@code null}
-	 */
-	public PackageNode getInnerPackageByName(String name) {
-		PackageNode result = null;
-		for (PackageNode p : innerPackages) {
-			if (p.getName().equals(name)) {
-				result = p;
-				break;
-			}
-		}
-		return result;
-	}
+        PackageNode currentP = this;
+        PackageNode parentP = currentP.getParentPackage();
 
-	/**
-	 * Fills stack with parent packages exclude root node
-	 *
-	 * @return stack with parent packages
-	 */
-	private Stack<PackageNode> getParentPackages() {
-		Stack<PackageNode> pp = new Stack<PackageNode>();
-
-		PackageNode currentP = this;
-		PackageNode parentP = currentP.getParentPackage();
-
-		while (currentP != parentP) {
-			pp.push(currentP);
-			currentP = parentP;
-			parentP = currentP.getParentPackage();
-		}
-		return pp;
-	}
+        while (currentP != parentP) {
+            pp.push(currentP);
+            currentP = parentP;
+            parentP = currentP.getParentPackage();
+        }
+        return pp;
+    }
 }
