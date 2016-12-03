@@ -2,115 +2,115 @@ package jadx.samples;
 
 public class TestInner extends AbstractTest {
 
-	public static int count = -2;
+    public static int count = -2;
 
-	public static class MyThread extends Thread {
+    public void func() {
+        new Runnable() {
+            @Override
+            public void run() {
+                count += 4;
+            }
+        }.run();
+    }
 
-		public MyThread(String name) {
-			super(name);
-		}
+    public void func2() {
+        new Runnable() {
+            {
+                count += 5;
+            }
 
-		@Override
-		public void run() {
-			count++;
-			super.run();
-		}
-	}
+            @Override
+            public void run() {
+                count += 6;
+            }
+        }.run();
+    }
 
-	public static class MyInceptionThread extends MyThread {
+    public String func3() {
+        return new Object() {
+            {
+                count += 7;
+            }
 
-		public static class MyThread2 extends Thread {
-			@Override
-			public void run() {
-				count += 2;
-			}
-		}
+            @Override
+            public String toString() {
+                count += 8;
+                return Integer.toString(count);
+            }
+        }.toString();
+    }
 
-		public MyInceptionThread() {
-			super("MyInceptionThread");
-		}
+    @Override
+    public boolean testRun() throws Exception {
+        TestInner c = new TestInner();
+        TestInner.count = 0;
+        c.func();
+        c.func2();
 
-		@Override
-		public void run() {
-			MyThread2 thr = new MyThread2();
-			thr.start();
-			try {
-				thr.join();
-			} catch (InterruptedException e) {
-				assertTrue(false);
-			}
-		}
-	}
+        Runnable myRunnable = new Runnable() {
+            @Override
+            public void run() {
+                TestInner.count += 8;
+            }
+        };
+        myRunnable.run();
 
-	public void func() {
-		new Runnable() {
-			@Override
-			public void run() {
-				count += 4;
-			}
-		}.run();
-	}
+        MyThread thread = new TestInner.MyThread("my thread");
+        thread.start();
 
-	public void func2() {
-		new Runnable() {
-			{
-				count += 5;
-			}
+        MyInceptionThread thread2 = new TestInner.MyInceptionThread();
+        thread2.start();
 
-			@Override
-			public void run() {
-				count += 6;
-			}
-		}.run();
-	}
+        thread.join();
+        thread2.join();
 
-	public String func3() {
-		return new Object() {
-			{
-				count += 7;
-			}
+        assertEquals(func3(), "41");
 
-			@Override
-			public String toString() {
-				count += 8;
-				return Integer.toString(count);
-			}
-		}.toString();
-	}
+        return TestInner.count == 41;
+    }
 
-	@SuppressWarnings("serial")
-	public static class MyException extends Exception {
-		public MyException(String str, Exception e) {
-			super("msg:" + str, e);
-		}
-	}
+    public static class MyThread extends Thread {
 
-	@Override
-	public boolean testRun() throws Exception {
-		TestInner c = new TestInner();
-		TestInner.count = 0;
-		c.func();
-		c.func2();
+        public MyThread(String name) {
+            super(name);
+        }
 
-		Runnable myRunnable = new Runnable() {
-			@Override
-			public void run() {
-				TestInner.count += 8;
-			}
-		};
-		myRunnable.run();
+        @Override
+        public void run() {
+            count++;
+            super.run();
+        }
+    }
 
-		MyThread thread = new TestInner.MyThread("my thread");
-		thread.start();
+    public static class MyInceptionThread extends MyThread {
 
-		MyInceptionThread thread2 = new TestInner.MyInceptionThread();
-		thread2.start();
+        public MyInceptionThread() {
+            super("MyInceptionThread");
+        }
 
-		thread.join();
-		thread2.join();
+        @Override
+        public void run() {
+            MyThread2 thr = new MyThread2();
+            thr.start();
+            try {
+                thr.join();
+            } catch (InterruptedException e) {
+                assertTrue(false);
+            }
+        }
 
-		assertEquals(func3(), "41");
+        public static class MyThread2 extends Thread {
+            @Override
+            public void run() {
+                count += 2;
+            }
+        }
+    }
 
-		return TestInner.count == 41;
-	}
+    @SuppressWarnings("serial")
+    public static class MyException extends Exception {
+        public MyException(String str, Exception e) {
+            super("msg:" + str, e);
+        }
+    }
 }

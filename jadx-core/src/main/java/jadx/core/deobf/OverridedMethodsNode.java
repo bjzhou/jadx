@@ -1,26 +1,26 @@
 package jadx.core.deobf;
 
-import jadx.core.dex.info.MethodInfo;
-
 import java.util.Set;
+
+import jadx.core.dex.info.MethodInfo;
 
 /* package */ class OverridedMethodsNode {
 
-	private Set<MethodInfo> methods;
+    private Set<MethodInfo> methods;
 
-	public OverridedMethodsNode(Set<MethodInfo> methodsSet) {
-		methods = methodsSet;
-	}
+    public OverridedMethodsNode(Set<MethodInfo> methodsSet) {
+        methods = methodsSet;
+    }
 
-	public boolean contains(MethodInfo mth) {
-		return methods.contains(mth);
-	}
+    public boolean contains(MethodInfo mth) {
+        return methods.contains(mth);
+    }
 
-	public void add(MethodInfo mth) {
-		methods.add(mth);
-	}
+    public void add(MethodInfo mth) {
+        methods.add(mth);
+    }
 
-	public Set<MethodInfo> getMethods() {
-		return methods;
-	}
+    public Set<MethodInfo> getMethods() {
+        return methods;
+    }
 }

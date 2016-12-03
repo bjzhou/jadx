@@ -8,41 +8,41 @@ import jadx.core.dex.nodes.InsnNode;
 
 public class EdgeInsnAttr implements IAttribute {
 
-	private final BlockNode start;
-	private final BlockNode end;
-	private final InsnNode insn;
+    private final BlockNode start;
+    private final BlockNode end;
+    private final InsnNode insn;
 
-	public static void addEdgeInsn(BlockNode start, BlockNode end, InsnNode insn) {
-		EdgeInsnAttr edgeInsnAttr = new EdgeInsnAttr(start, end, insn);
-		start.addAttr(AType.EDGE_INSN, edgeInsnAttr);
-		end.addAttr(AType.EDGE_INSN, edgeInsnAttr);
-	}
+    public EdgeInsnAttr(BlockNode start, BlockNode end, InsnNode insn) {
+        this.start = start;
+        this.end = end;
+        this.insn = insn;
+    }
 
-	public EdgeInsnAttr(BlockNode start, BlockNode end, InsnNode insn) {
-		this.start = start;
-		this.end = end;
-		this.insn = insn;
-	}
+    public static void addEdgeInsn(BlockNode start, BlockNode end, InsnNode insn) {
+        EdgeInsnAttr edgeInsnAttr = new EdgeInsnAttr(start, end, insn);
+        start.addAttr(AType.EDGE_INSN, edgeInsnAttr);
+        end.addAttr(AType.EDGE_INSN, edgeInsnAttr);
+    }
 
-	@Override
-	public AType<AttrList<EdgeInsnAttr>> getType() {
-		return AType.EDGE_INSN;
-	}
+    @Override
+    public AType<AttrList<EdgeInsnAttr>> getType() {
+        return AType.EDGE_INSN;
+    }
 
-	public BlockNode getStart() {
-		return start;
-	}
+    public BlockNode getStart() {
+        return start;
+    }
 
-	public BlockNode getEnd() {
-		return end;
-	}
+    public BlockNode getEnd() {
+        return end;
+    }
 
-	public InsnNode getInsn() {
-		return insn;
-	}
+    public InsnNode getInsn() {
+        return insn;
+    }
 
-	@Override
-	public String toString() {
-		return "EDGE_INSN: " + start + "->" + end + " " + insn;
-	}
+    @Override
+    public String toString() {
+        return "EDGE_INSN: " + start + "->" + end + " " + insn;
+    }
 }

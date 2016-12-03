@@ -5,23 +5,23 @@ import jadx.core.dex.attributes.IAttribute;
 
 public class SourceFileAttr implements IAttribute {
 
-	private final String fileName;
+    private final String fileName;
 
-	public SourceFileAttr(String fileName) {
-		this.fileName = fileName;
-	}
+    public SourceFileAttr(String fileName) {
+        this.fileName = fileName;
+    }
 
-	public String getFileName() {
-		return fileName;
-	}
+    public String getFileName() {
+        return fileName;
+    }
 
-	@Override
-	public AType<SourceFileAttr> getType() {
-		return AType.SOURCE_FILE;
-	}
+    @Override
+    public AType<SourceFileAttr> getType() {
+        return AType.SOURCE_FILE;
+    }
 
-	@Override
-	public String toString() {
-		return "SOURCE:" + fileName;
-	}
+    @Override
+    public String toString() {
+        return "SOURCE:" + fileName;
+    }
 }

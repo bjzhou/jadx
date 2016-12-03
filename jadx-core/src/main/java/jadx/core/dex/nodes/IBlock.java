@@ -4,5 +4,5 @@ import java.util.List;
 
 public interface IBlock extends IContainer {
 
-	List<InsnNode> getInstructions();
+    List<InsnNode> getInstructions();
 }

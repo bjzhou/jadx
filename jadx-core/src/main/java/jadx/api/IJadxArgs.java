@@ -3,43 +3,43 @@ package jadx.api;
 import java.io.File;
 
 public interface IJadxArgs {
-	File getOutDir();
+    File getOutDir();
 
-	int getThreadsCount();
+    int getThreadsCount();
 
-	boolean isCFGOutput();
+    boolean isCFGOutput();
 
-	boolean isRawCFGOutput();
+    boolean isRawCFGOutput();
 
-	boolean isFallbackMode();
+    boolean isFallbackMode();
 
-	boolean isShowInconsistentCode();
+    boolean isShowInconsistentCode();
 
-	boolean isVerbose();
+    boolean isVerbose();
 
-	boolean isSkipResources();
+    boolean isSkipResources();
 
-	boolean isSkipSources();
+    boolean isSkipSources();
 
-	boolean isDeobfuscationOn();
+    boolean isDeobfuscationOn();
 
-	int getDeobfuscationMinLength();
+    int getDeobfuscationMinLength();
 
-	int getDeobfuscationMaxLength();
+    int getDeobfuscationMaxLength();
 
-	boolean isDeobfuscationForceSave();
+    boolean isDeobfuscationForceSave();
 
-	boolean useSourceNameAsClassAlias();
+    boolean useSourceNameAsClassAlias();
 
-	boolean escapeUnicode();
+    boolean escapeUnicode();
 
-	/**
-	 * Replace constant values with static final fields with same value
-	 */
-	boolean isReplaceConsts();
+    /**
+     * Replace constant values with static final fields with same value
+     */
+    boolean isReplaceConsts();
 
-	/**
-	 * Save as gradle project
-	 */
-	boolean isExportAsGradleProject();
+    /**
+     * Save as gradle project
+     */
+    boolean isExportAsGradleProject();
 }

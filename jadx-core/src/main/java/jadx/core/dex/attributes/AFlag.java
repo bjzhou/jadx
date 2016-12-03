@@ -1,38 +1,38 @@
 package jadx.core.dex.attributes;
 
 public enum AFlag {
-	TRY_ENTER,
-	TRY_LEAVE,
+    TRY_ENTER,
+    TRY_LEAVE,
 
-	LOOP_START,
-	LOOP_END,
+    LOOP_START,
+    LOOP_END,
 
-	SYNTHETIC,
-	FINAL, // SSAVar attribute for make var final
+    SYNTHETIC,
+    FINAL, // SSAVar attribute for make var final
 
-	RETURN, // block contains only return instruction
-	ORIG_RETURN,
+    RETURN, // block contains only return instruction
+    ORIG_RETURN,
 
-	DECLARE_VAR,
-	DONT_WRAP,
+    DECLARE_VAR,
+    DONT_WRAP,
 
-	DONT_SHRINK,
-	DONT_INLINE,
-	DONT_GENERATE,
-	SKIP,
-	REMOVE,
+    DONT_SHRINK,
+    DONT_INLINE,
+    DONT_GENERATE,
+    SKIP,
+    REMOVE,
 
-	SKIP_FIRST_ARG,
-	SKIP_ARG, // skip argument in invoke call
-	ANONYMOUS_CONSTRUCTOR,
-	ANONYMOUS_CLASS,
+    SKIP_FIRST_ARG,
+    SKIP_ARG, // skip argument in invoke call
+    ANONYMOUS_CONSTRUCTOR,
+    ANONYMOUS_CLASS,
 
-	ELSE_IF_CHAIN,
+    ELSE_IF_CHAIN,
 
-	WRAPPED,
-	ARITH_ONEARG,
+    WRAPPED,
+    ARITH_ONEARG,
 
-	FALL_THROUGH,
+    FALL_THROUGH,
 
-	INCONSISTENT_CODE, // warning about incorrect decompilation
+    INCONSISTENT_CODE, // warning about incorrect decompilation
 }

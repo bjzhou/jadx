@@ -7,145 +7,144 @@ import java.util.Set;
 
 public class TestEnum extends AbstractTest {
 
-	public enum Direction {
-		NORTH, SOUTH, EAST, WEST
-	}
+    public static final String DOG = "DOG";
+    private static int three = 3;
 
-	public static final String DOG = "DOG";
+    public static void main(String[] args) throws Exception {
+        new TestEnum().testRun();
+    }
 
-	public enum Animal {
-		CAT, DOG
-	}
+    public String testEnumSwitch(final Direction color) {
+        String d;
+        switch (color) {
+            case NORTH:
+                d = "N";
+                break;
+            case SOUTH:
+                d = "S";
+                break;
+            default:
+                d = "<>";
+                break;
+        }
+        return d;
+    }
 
-	private static int three = 3;
+    @Override
+    public boolean testRun() throws Exception {
+        Direction d = Direction.EAST;
+        assertTrue(d.toString().equals("EAST"));
+        assertTrue(d.ordinal() == 2);
+        assertTrue(Numbers.THREE.getNum() == 3);
+        assertTrue(Operation.PLUS.apply(2, 2) == 4);
+        assertTrue(DoubleOperations.TIMES.apply(1, 1) == 1);
+        assertTrue(Types.getPrimitives().contains(Types.INT));
+        assertTrue(Types.references.size() == 2);
+        assertTrue(EmptyEnum.values().length == 0);
+        assertTrue(EmptyEnum.getOp().equals("op"));
+        assertTrue(Singleton.INSTANCE.test("a").equals("atest"));
+        return true;
+    }
 
-	public enum Numbers {
-		ONE(1), TWO(2), THREE(three), FOUR(three + 1);
+    public enum Direction {
+        NORTH, SOUTH, EAST, WEST
+    }
 
-		private final int num;
+    public enum Animal {
+        CAT, DOG
+    }
 
-		private Numbers(int n) {
-			this.num = n;
-		}
+    public enum Numbers {
+        ONE(1), TWO(2), THREE(three), FOUR(three + 1);
 
-		public int getNum() {
-			return num;
-		}
-	}
+        private final int num;
 
-	public enum Operation {
-		PLUS {
-			@Override
-			int apply(int x, int y) {
-				return x + y;
-			}
-		},
-		MINUS {
-			@Override
-			int apply(int x, int y) {
-				return x - y;
-			}
-		};
+        private Numbers(int n) {
+            this.num = n;
+        }
 
-		abstract int apply(int x, int y);
-	}
+        public int getNum() {
+            return num;
+        }
+    }
 
-	public interface IOps {
-		double apply(double x, double y);
-	}
+    public enum Operation {
+        PLUS {
+            @Override
+            int apply(int x, int y) {
+                return x + y;
+            }
+        },
+        MINUS {
+            @Override
+            int apply(int x, int y) {
+                return x - y;
+            }
+        };
 
-	public enum DoubleOperations implements IOps {
-		TIMES("*") {
-			@Override
-			public double apply(double x, double y) {
-				return x * y;
-			}
-		},
-		DIVIDE("/") {
-			@Override
-			public double apply(double x, double y) {
-				return x / y;
-			}
-		};
+        abstract int apply(int x, int y);
+    }
 
-		private final String op;
+    public enum DoubleOperations implements IOps {
+        TIMES("*") {
+            @Override
+            public double apply(double x, double y) {
+                return x * y;
+            }
+        },
+        DIVIDE("/") {
+            @Override
+            public double apply(double x, double y) {
+                return x / y;
+            }
+        };
 
-		private DoubleOperations(String op) {
-			this.op = op;
-		}
+        private final String op;
 
-		public String getOp() {
-			return op;
-		}
-	}
+        private DoubleOperations(String op) {
+            this.op = op;
+        }
 
-	public enum Types {
-		INT, FLOAT,
-		LONG, DOUBLE,
-		OBJECT, ARRAY;
+        public String getOp() {
+            return op;
+        }
+    }
 
-		private static Set<Types> primitives = EnumSet.of(INT, FLOAT, LONG, DOUBLE);
-		public static List<Types> references = new ArrayList<Types>();
+    public enum Types {
+        INT, FLOAT,
+        LONG, DOUBLE,
+        OBJECT, ARRAY;
 
-		static {
-			references.add(OBJECT);
-			references.add(ARRAY);
-		}
+        public static List<Types> references = new ArrayList<Types>();
+        private static Set<Types> primitives = EnumSet.of(INT, FLOAT, LONG, DOUBLE);
 
-		public static Set<Types> getPrimitives() {
-			return primitives;
-		}
-	}
+        static {
+            references.add(OBJECT);
+            references.add(ARRAY);
+        }
 
-	public enum EmptyEnum {
-		;
+        public static Set<Types> getPrimitives() {
+            return primitives;
+        }
+    }
 
-		public static String getOp() {
-			return "op";
-		}
-	}
+    public enum EmptyEnum {
+        ;
 
-	public enum Singleton {
-		INSTANCE;
+        public static String getOp() {
+            return "op";
+        }
+    }
 
-		public String test(String arg) {
-			return arg.concat("test");
-		}
-	}
+    public enum Singleton {
+        INSTANCE;
 
-	public String testEnumSwitch(final Direction color) {
-		String d;
-		switch (color) {
-			case NORTH:
-				d = "N";
-				break;
-			case SOUTH:
-				d = "S";
-				break;
-			default:
-				d = "<>";
-				break;
-		}
-		return d;
-	}
+        public String test(String arg) {
+            return arg.concat("test");
+        }
+    }
 
-	@Override
-	public boolean testRun() throws Exception {
-		Direction d = Direction.EAST;
-		assertTrue(d.toString().equals("EAST"));
-		assertTrue(d.ordinal() == 2);
-		assertTrue(Numbers.THREE.getNum() == 3);
-		assertTrue(Operation.PLUS.apply(2, 2) == 4);
-		assertTrue(DoubleOperations.TIMES.apply(1, 1) == 1);
-		assertTrue(Types.getPrimitives().contains(Types.INT));
-		assertTrue(Types.references.size() == 2);
-		assertTrue(EmptyEnum.values().length == 0);
-		assertTrue(EmptyEnum.getOp().equals("op"));
-		assertTrue(Singleton.INSTANCE.test("a").equals("atest"));
-		return true;
-	}
-
-	public static void main(String[] args) throws Exception {
-		new TestEnum().testRun();
-	}
+    public interface IOps {
+        double apply(double x, double y);
+    }
 }

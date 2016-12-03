@@ -5,23 +5,23 @@ import jadx.core.utils.InsnUtils;
 
 public class GotoNode extends InsnNode {
 
-	protected int target;
+    protected int target;
 
-	public GotoNode(int target) {
-		this(InsnType.GOTO, target, 0);
-	}
+    public GotoNode(int target) {
+        this(InsnType.GOTO, target, 0);
+    }
 
-	protected GotoNode(InsnType type, int target, int argsCount) {
-		super(type, argsCount);
-		this.target = target;
-	}
+    protected GotoNode(InsnType type, int target, int argsCount) {
+        super(type, argsCount);
+        this.target = target;
+    }
 
-	public int getTarget() {
-		return target;
-	}
+    public int getTarget() {
+        return target;
+    }
 
-	@Override
-	public String toString() {
-		return super.toString() + "-> " + InsnUtils.formatOffset(target);
-	}
+    @Override
+    public String toString() {
+        return super.toString() + "-> " + InsnUtils.formatOffset(target);
+    }
 }

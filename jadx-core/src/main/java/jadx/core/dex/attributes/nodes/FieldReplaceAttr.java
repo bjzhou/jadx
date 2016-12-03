@@ -7,43 +7,42 @@ import jadx.core.dex.instructions.args.InsnArg;
 
 public class FieldReplaceAttr implements IAttribute {
 
-	public enum ReplaceWith {
-		CLASS_INSTANCE,
-		VAR
-	}
+    private final ReplaceWith replaceType;
+    private final Object replaceObj;
+    public FieldReplaceAttr(ClassInfo cls) {
+        this.replaceType = ReplaceWith.CLASS_INSTANCE;
+        this.replaceObj = cls;
+    }
 
-	private final ReplaceWith replaceType;
-	private final Object replaceObj;
+    public FieldReplaceAttr(InsnArg reg) {
+        this.replaceType = ReplaceWith.VAR;
+        this.replaceObj = reg;
+    }
 
-	public FieldReplaceAttr(ClassInfo cls) {
-		this.replaceType = ReplaceWith.CLASS_INSTANCE;
-		this.replaceObj = cls;
-	}
+    public ReplaceWith getReplaceType() {
+        return replaceType;
+    }
 
-	public FieldReplaceAttr(InsnArg reg) {
-		this.replaceType = ReplaceWith.VAR;
-		this.replaceObj = reg;
-	}
+    public ClassInfo getClsRef() {
+        return (ClassInfo) replaceObj;
+    }
 
-	public ReplaceWith getReplaceType() {
-		return replaceType;
-	}
+    public InsnArg getVarRef() {
+        return (InsnArg) replaceObj;
+    }
 
-	public ClassInfo getClsRef() {
-		return (ClassInfo) replaceObj;
-	}
+    @Override
+    public AType<FieldReplaceAttr> getType() {
+        return AType.FIELD_REPLACE;
+    }
 
-	public InsnArg getVarRef() {
-		return (InsnArg) replaceObj;
-	}
+    @Override
+    public String toString() {
+        return "REPLACE: " + replaceType + " " + replaceObj;
+    }
 
-	@Override
-	public AType<FieldReplaceAttr> getType() {
-		return AType.FIELD_REPLACE;
-	}
-
-	@Override
-	public String toString() {
-		return "REPLACE: " + replaceType + " " + replaceObj;
-	}
+    public enum ReplaceWith {
+        CLASS_INSTANCE,
+        VAR
+    }
 }

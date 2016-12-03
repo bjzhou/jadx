@@ -1,14 +1,29 @@
 package jadx.gui.ui;
 
-import jadx.gui.jobs.BackgroundJob;
-import jadx.gui.jobs.BackgroundWorker;
-import jadx.gui.jobs.DecompileJob;
-import jadx.gui.treemodel.JNode;
-import jadx.gui.treemodel.TextNode;
-import jadx.gui.utils.CacheObject;
-import jadx.gui.utils.NLS;
-import jadx.gui.utils.Position;
-import jadx.gui.utils.search.TextSearchIndex;
+import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
+import org.fife.ui.rtextarea.SearchContext;
+import org.fife.ui.rtextarea.SearchEngine;
+import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -31,420 +46,404 @@ import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Cursor;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
-import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
-import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
-import org.fife.ui.rtextarea.SearchContext;
-import org.fife.ui.rtextarea.SearchEngine;
-import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import jadx.gui.jobs.BackgroundJob;
+import jadx.gui.jobs.BackgroundWorker;
+import jadx.gui.jobs.DecompileJob;
+import jadx.gui.treemodel.JNode;
+import jadx.gui.treemodel.TextNode;
+import jadx.gui.utils.CacheObject;
+import jadx.gui.utils.NLS;
+import jadx.gui.utils.Position;
+import jadx.gui.utils.search.TextSearchIndex;
 
 public abstract class CommonSearchDialog extends JDialog {
 
-	private static final Logger LOG = LoggerFactory.getLogger(CommonSearchDialog.class);
-	private static final long serialVersionUID = 8939332306115370276L;
+    public static final int MAX_RESULTS_COUNT = 100;
+    private static final Logger LOG = LoggerFactory.getLogger(CommonSearchDialog.class);
+    private static final long serialVersionUID = 8939332306115370276L;
+    protected final TabbedPane tabbedPane;
+    protected final CacheObject cache;
+    protected final MainWindow mainWindow;
+    protected final Font codeFont;
 
-	public static final int MAX_RESULTS_COUNT = 100;
+    protected ResultsModel resultsModel;
+    protected ResultsTable resultsTable;
+    protected JLabel warnLabel;
+    protected ProgressPanel progressPane;
 
-	protected final TabbedPane tabbedPane;
-	protected final CacheObject cache;
-	protected final MainWindow mainWindow;
-	protected final Font codeFont;
+    protected String highlightText;
 
-	protected ResultsModel resultsModel;
-	protected ResultsTable resultsTable;
-	protected JLabel warnLabel;
-	protected ProgressPanel progressPane;
+    public CommonSearchDialog(MainWindow mainWindow) {
+        super(mainWindow);
+        this.mainWindow = mainWindow;
+        this.tabbedPane = mainWindow.getTabbedPane();
+        this.cache = mainWindow.getCacheObject();
+        this.codeFont = mainWindow.getSettings().getFont();
+    }
 
-	protected String highlightText;
+    public void loadWindowPos() {
+        mainWindow.getSettings().loadWindowPos(this);
+    }
 
-	public CommonSearchDialog(MainWindow mainWindow) {
-		super(mainWindow);
-		this.mainWindow = mainWindow;
-		this.tabbedPane = mainWindow.getTabbedPane();
-		this.cache = mainWindow.getCacheObject();
-		this.codeFont = mainWindow.getSettings().getFont();
-	}
+    public void prepare() {
+        if (cache.getIndexJob().isComplete()) {
+            loadFinishedCommon();
+            loadFinished();
+            return;
+        }
+        LoadTask task = new LoadTask();
+        task.addPropertyChangeListener(progressPane);
+        task.execute();
+    }
 
-	public void loadWindowPos() {
-		mainWindow.getSettings().loadWindowPos(this);
-	}
+    protected void openSelectedItem() {
+        int selectedId = resultsTable.getSelectedRow();
+        if (selectedId == -1) {
+            return;
+        }
+        JNode node = (JNode) resultsModel.getValueAt(selectedId, 0);
+        tabbedPane.codeJump(new Position(node.getRootClass(), node.getLine()));
 
-	public void prepare() {
-		if (cache.getIndexJob().isComplete()) {
-			loadFinishedCommon();
-			loadFinished();
-			return;
-		}
-		LoadTask task = new LoadTask();
-		task.addPropertyChangeListener(progressPane);
-		task.execute();
-	}
+        dispose();
+    }
 
-	protected void openSelectedItem() {
-		int selectedId = resultsTable.getSelectedRow();
-		if (selectedId == -1) {
-			return;
-		}
-		JNode node = (JNode) resultsModel.getValueAt(selectedId, 0);
-		tabbedPane.codeJump(new Position(node.getRootClass(), node.getLine()));
+    @Override
+    public void dispose() {
+        mainWindow.getSettings().saveWindowPos(this);
+        super.dispose();
+    }
 
-		dispose();
-	}
+    protected void initCommon() {
+        KeyStroke stroke = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0);
+        getRootPane().registerKeyboardAction(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                dispose();
+            }
+        }, stroke, JComponent.WHEN_IN_FOCUSED_WINDOW);
+    }
 
-	@Override
-	public void dispose() {
-		mainWindow.getSettings().saveWindowPos(this);
-		super.dispose();
-	}
+    @NotNull
+    protected JPanel initButtonsPanel() {
+        progressPane = new ProgressPanel(mainWindow, false);
 
-	protected void initCommon() {
-		KeyStroke stroke = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0);
-		getRootPane().registerKeyboardAction(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				dispose();
-			}
-		}, stroke, JComponent.WHEN_IN_FOCUSED_WINDOW);
-	}
+        JButton cancelButton = new JButton(NLS.str("search_dialog.cancel"));
+        cancelButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent event) {
+                dispose();
+            }
+        });
+        JButton openBtn = new JButton(NLS.str("search_dialog.open"));
+        openBtn.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent event) {
+                openSelectedItem();
+            }
+        });
+        getRootPane().setDefaultButton(openBtn);
 
-	@NotNull
-	protected JPanel initButtonsPanel() {
-		progressPane = new ProgressPanel(mainWindow, false);
+        JPanel buttonPane = new JPanel();
+        buttonPane.setLayout(new BoxLayout(buttonPane, BoxLayout.LINE_AXIS));
+        buttonPane.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
+        buttonPane.add(progressPane);
+        buttonPane.add(Box.createRigidArea(new Dimension(5, 0)));
+        buttonPane.add(Box.createHorizontalGlue());
+        buttonPane.add(openBtn);
+        buttonPane.add(Box.createRigidArea(new Dimension(10, 0)));
+        buttonPane.add(cancelButton);
+        return buttonPane;
+    }
 
-		JButton cancelButton = new JButton(NLS.str("search_dialog.cancel"));
-		cancelButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent event) {
-				dispose();
-			}
-		});
-		JButton openBtn = new JButton(NLS.str("search_dialog.open"));
-		openBtn.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent event) {
-				openSelectedItem();
-			}
-		});
-		getRootPane().setDefaultButton(openBtn);
+    protected JPanel initResultsTable() {
+        ResultsTableCellRenderer renderer = new ResultsTableCellRenderer();
+        resultsModel = new ResultsModel(renderer);
+        resultsTable = new ResultsTable(resultsModel);
+        resultsTable.setShowHorizontalLines(false);
+        resultsTable.setDragEnabled(false);
+        resultsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        resultsTable.setBackground(CodeArea.BACKGROUND);
+        resultsTable.setColumnSelectionAllowed(false);
+        resultsTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        resultsTable.setAutoscrolls(false);
 
-		JPanel buttonPane = new JPanel();
-		buttonPane.setLayout(new BoxLayout(buttonPane, BoxLayout.LINE_AXIS));
-		buttonPane.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
-		buttonPane.add(progressPane);
-		buttonPane.add(Box.createRigidArea(new Dimension(5, 0)));
-		buttonPane.add(Box.createHorizontalGlue());
-		buttonPane.add(openBtn);
-		buttonPane.add(Box.createRigidArea(new Dimension(10, 0)));
-		buttonPane.add(cancelButton);
-		return buttonPane;
-	}
+        Enumeration<TableColumn> columns = resultsTable.getColumnModel().getColumns();
+        while (columns.hasMoreElements()) {
+            TableColumn column = columns.nextElement();
+            column.setCellRenderer(renderer);
+        }
 
-	protected JPanel initResultsTable() {
-		ResultsTableCellRenderer renderer = new ResultsTableCellRenderer();
-		resultsModel = new ResultsModel(renderer);
-		resultsTable = new ResultsTable(resultsModel);
-		resultsTable.setShowHorizontalLines(false);
-		resultsTable.setDragEnabled(false);
-		resultsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		resultsTable.setBackground(CodeArea.BACKGROUND);
-		resultsTable.setColumnSelectionAllowed(false);
-		resultsTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-		resultsTable.setAutoscrolls(false);
+        resultsTable.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent evt) {
+                if (evt.getClickCount() == 2) {
+                    openSelectedItem();
+                }
+            }
+        });
+        resultsTable.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    openSelectedItem();
+                }
+            }
+        });
 
-		Enumeration<TableColumn> columns = resultsTable.getColumnModel().getColumns();
-		while (columns.hasMoreElements()) {
-			TableColumn column = columns.nextElement();
-			column.setCellRenderer(renderer);
-		}
+        warnLabel = new JLabel();
+        warnLabel.setForeground(Color.RED);
+        warnLabel.setVisible(false);
 
-		resultsTable.addMouseListener(new MouseAdapter() {
-			public void mouseClicked(MouseEvent evt) {
-				if (evt.getClickCount() == 2) {
-					openSelectedItem();
-				}
-			}
-		});
-		resultsTable.addKeyListener(new KeyAdapter() {
-			@Override
-			public void keyPressed(KeyEvent e) {
-				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-					openSelectedItem();
-				}
-			}
-		});
+        JPanel resultsPanel = new JPanel();
+        resultsPanel.setLayout(new BoxLayout(resultsPanel, BoxLayout.PAGE_AXIS));
+        resultsPanel.add(warnLabel);
+        resultsPanel.add(new JScrollPane(resultsTable,
+                ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
+                ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED));
+        resultsPanel.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
+        return resultsPanel;
+    }
 
-		warnLabel = new JLabel();
-		warnLabel.setForeground(Color.RED);
-		warnLabel.setVisible(false);
+    protected void loadStartCommon() {
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+        progressPane.setIndeterminate(true);
+        progressPane.setVisible(true);
+        resultsTable.setEnabled(false);
+        warnLabel.setVisible(false);
+    }
 
-		JPanel resultsPanel = new JPanel();
-		resultsPanel.setLayout(new BoxLayout(resultsPanel, BoxLayout.PAGE_AXIS));
-		resultsPanel.add(warnLabel);
-		resultsPanel.add(new JScrollPane(resultsTable,
-				ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
-				ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED));
-		resultsPanel.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
-		return resultsPanel;
-	}
+    private void loadFinishedCommon() {
+        setCursor(null);
+        resultsTable.setEnabled(true);
+        progressPane.setVisible(false);
 
-	protected static class ResultsTable extends JTable {
-		private static final long serialVersionUID = 3901184054736618969L;
+        TextSearchIndex textIndex = cache.getTextIndex();
+        if (textIndex == null) {
+            warnLabel.setText("Index not initialized, search will be disabled!");
+            warnLabel.setVisible(true);
+        }
+    }
 
-		public ResultsTable(ResultsModel resultsModel) {
-			super(resultsModel);
-		}
+    protected abstract void loadFinished();
 
-		public void updateTable() {
-			ResultsModel model = (ResultsModel) getModel();
-			TableColumnModel columnModel = getColumnModel();
+    protected abstract void loadStart();
 
-			int width = getParent().getWidth();
-			int firstColMaxWidth = (int) (width * 0.5);
-			int rowCount = getRowCount();
-			int columnCount = getColumnCount();
-			if (!model.isAddDescColumn()) {
-				firstColMaxWidth = width;
-			}
-			Component codeComp = null;
-			for (int col = 0; col < columnCount; col++) {
-				int colWidth = 50;
-				for (int row = 0; row < rowCount; row++) {
-					TableCellRenderer renderer = getCellRenderer(row, col);
-					Component comp = prepareRenderer(renderer, row, col);
-					if (comp == null) {
-						continue;
-					}
-					colWidth = Math.max(comp.getPreferredSize().width, colWidth);
-					if (codeComp == null && col == 1) {
-						codeComp = comp;
-					}
-				}
-				colWidth += 10;
-				if (col == 0) {
-					colWidth = Math.min(colWidth, firstColMaxWidth);
-				} else {
-					colWidth = Math.max(colWidth, width - columnModel.getColumn(0).getPreferredWidth());
-				}
-				TableColumn column = columnModel.getColumn(col);
-				column.setPreferredWidth(colWidth);
-			}
-			if (codeComp != null) {
-				setRowHeight(Math.max(20, codeComp.getPreferredSize().height + 4));
-			}
-			updateUI();
-		}
-	}
+    protected static class ResultsTable extends JTable {
+        private static final long serialVersionUID = 3901184054736618969L;
 
-	protected static class ResultsModel extends AbstractTableModel {
-		private static final long serialVersionUID = -7821286846923903208L;
-		private static final String[] COLUMN_NAMES = {"Node", "Code"};
+        public ResultsTable(ResultsModel resultsModel) {
+            super(resultsModel);
+        }
 
-		private final List<JNode> rows = new ArrayList<JNode>();
-		private final ResultsTableCellRenderer renderer;
-		private boolean addDescColumn;
+        public void updateTable() {
+            ResultsModel model = (ResultsModel) getModel();
+            TableColumnModel columnModel = getColumnModel();
 
-		public ResultsModel(ResultsTableCellRenderer renderer) {
-			this.renderer = renderer;
-		}
+            int width = getParent().getWidth();
+            int firstColMaxWidth = (int) (width * 0.5);
+            int rowCount = getRowCount();
+            int columnCount = getColumnCount();
+            if (!model.isAddDescColumn()) {
+                firstColMaxWidth = width;
+            }
+            Component codeComp = null;
+            for (int col = 0; col < columnCount; col++) {
+                int colWidth = 50;
+                for (int row = 0; row < rowCount; row++) {
+                    TableCellRenderer renderer = getCellRenderer(row, col);
+                    Component comp = prepareRenderer(renderer, row, col);
+                    if (comp == null) {
+                        continue;
+                    }
+                    colWidth = Math.max(comp.getPreferredSize().width, colWidth);
+                    if (codeComp == null && col == 1) {
+                        codeComp = comp;
+                    }
+                }
+                colWidth += 10;
+                if (col == 0) {
+                    colWidth = Math.min(colWidth, firstColMaxWidth);
+                } else {
+                    colWidth = Math.max(colWidth, width - columnModel.getColumn(0).getPreferredWidth());
+                }
+                TableColumn column = columnModel.getColumn(col);
+                column.setPreferredWidth(colWidth);
+            }
+            if (codeComp != null) {
+                setRowHeight(Math.max(20, codeComp.getPreferredSize().height + 4));
+            }
+            updateUI();
+        }
+    }
 
-		protected void addAll(Iterable<? extends JNode> nodes) {
-			for (JNode node : nodes) {
-				int size = getRowCount();
-				if (size >= MAX_RESULTS_COUNT) {
-					if (size == MAX_RESULTS_COUNT) {
-						add(new TextNode("Search results truncated (limit: " + MAX_RESULTS_COUNT + ")"));
-					}
-					return;
-				}
-				add(node);
-			}
-		}
+    protected static class ResultsModel extends AbstractTableModel {
+        private static final long serialVersionUID = -7821286846923903208L;
+        private static final String[] COLUMN_NAMES = {"Node", "Code"};
 
-		private void add(JNode node) {
-			if (node.hasDescString()) {
-				addDescColumn = true;
-			}
-			rows.add(node);
-		}
+        private final List<JNode> rows = new ArrayList<JNode>();
+        private final ResultsTableCellRenderer renderer;
+        private boolean addDescColumn;
 
-		public void clear() {
-			addDescColumn = false;
-			rows.clear();
-			renderer.clear();
-		}
+        public ResultsModel(ResultsTableCellRenderer renderer) {
+            this.renderer = renderer;
+        }
 
-		public boolean isAddDescColumn() {
-			return addDescColumn;
-		}
+        protected void addAll(Iterable<? extends JNode> nodes) {
+            for (JNode node : nodes) {
+                int size = getRowCount();
+                if (size >= MAX_RESULTS_COUNT) {
+                    if (size == MAX_RESULTS_COUNT) {
+                        add(new TextNode("Search results truncated (limit: " + MAX_RESULTS_COUNT + ")"));
+                    }
+                    return;
+                }
+                add(node);
+            }
+        }
 
-		@Override
-		public int getRowCount() {
-			return rows.size();
-		}
+        private void add(JNode node) {
+            if (node.hasDescString()) {
+                addDescColumn = true;
+            }
+            rows.add(node);
+        }
 
-		@Override
-		public int getColumnCount() {
-			return 2;
-		}
+        public void clear() {
+            addDescColumn = false;
+            rows.clear();
+            renderer.clear();
+        }
 
-		@Override
-		public String getColumnName(int index) {
-			return COLUMN_NAMES[index];
-		}
+        public boolean isAddDescColumn() {
+            return addDescColumn;
+        }
 
-		@Override
-		public Object getValueAt(int rowIndex, int columnIndex) {
-			return rows.get(rowIndex);
-		}
-	}
+        @Override
+        public int getRowCount() {
+            return rows.size();
+        }
 
-	protected class ResultsTableCellRenderer implements TableCellRenderer {
-		private final Color selectedBackground;
-		private final Color selectedForeground;
-		private final Color foreground;
+        @Override
+        public int getColumnCount() {
+            return 2;
+        }
 
-		private final JLabel emptyLabel = new JLabel();
+        @Override
+        public String getColumnName(int index) {
+            return COLUMN_NAMES[index];
+        }
 
-		private Map<Integer, Component> componentCache = new HashMap<Integer, Component>();
+        @Override
+        public Object getValueAt(int rowIndex, int columnIndex) {
+            return rows.get(rowIndex);
+        }
+    }
 
-		public ResultsTableCellRenderer() {
-			UIDefaults defaults = UIManager.getDefaults();
-			foreground = defaults.getColor("List.foreground");
-			selectedBackground = defaults.getColor("List.selectionBackground");
-			selectedForeground = defaults.getColor("List.selectionForeground");
-		}
+    protected class ResultsTableCellRenderer implements TableCellRenderer {
+        private final Color selectedBackground;
+        private final Color selectedForeground;
+        private final Color foreground;
 
-		@Override
-		public Component getTableCellRendererComponent(JTable table, Object obj, boolean isSelected,
-				boolean hasFocus, int row, int column) {
-			int id = row << 2 | column;
-			Component comp = componentCache.get(id);
-			if (comp == null) {
-				if (obj instanceof JNode) {
-					comp = makeCell((JNode) obj, column);
-					componentCache.put(id, comp);
-				} else {
-					comp = emptyLabel;
-				}
-			}
-			updateSelection(comp, isSelected);
-			return comp;
-		}
+        private final JLabel emptyLabel = new JLabel();
 
-		private void updateSelection(Component comp, boolean isSelected) {
-			if (isSelected) {
-				comp.setBackground(selectedBackground);
-				comp.setForeground(selectedForeground);
-			} else {
-				comp.setBackground(CodeArea.BACKGROUND);
-				comp.setForeground(foreground);
-			}
-		}
+        private Map<Integer, Component> componentCache = new HashMap<Integer, Component>();
 
-		private Component makeCell(JNode node, int column) {
-			if (column == 0) {
-				JLabel label = new JLabel(node.makeLongString() + "  ", node.getIcon(), SwingConstants.LEFT);
-				label.setOpaque(true);
-				label.setToolTipText(label.getText());
-				return label;
-			}
-			if (!node.hasDescString()) {
-				return emptyLabel;
-			}
-			RSyntaxTextArea textArea = new RSyntaxTextArea();
-			textArea.setFont(codeFont);
-			textArea.setEditable(false);
-			textArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JAVA);
-			textArea.setText("  " + node.makeDescString());
-			textArea.setRows(1);
-			textArea.setColumns(textArea.getText().length());
-			if (highlightText != null) {
-				SearchContext searchContext = new SearchContext(highlightText);
-				searchContext.setMatchCase(true);
-				searchContext.setMarkAll(true);
-				SearchEngine.markAll(textArea, searchContext);
-			}
-			return textArea;
-		}
+        public ResultsTableCellRenderer() {
+            UIDefaults defaults = UIManager.getDefaults();
+            foreground = defaults.getColor("List.foreground");
+            selectedBackground = defaults.getColor("List.selectionBackground");
+            selectedForeground = defaults.getColor("List.selectionForeground");
+        }
 
-		public void clear() {
-			componentCache.clear();
-		}
-	}
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object obj, boolean isSelected,
+                                                       boolean hasFocus, int row, int column) {
+            int id = row << 2 | column;
+            Component comp = componentCache.get(id);
+            if (comp == null) {
+                if (obj instanceof JNode) {
+                    comp = makeCell((JNode) obj, column);
+                    componentCache.put(id, comp);
+                } else {
+                    comp = emptyLabel;
+                }
+            }
+            updateSelection(comp, isSelected);
+            return comp;
+        }
 
-	private class LoadTask extends SwingWorker<Void, Void> {
-		public LoadTask() {
-			loadStartCommon();
-			loadStart();
-		}
+        private void updateSelection(Component comp, boolean isSelected) {
+            if (isSelected) {
+                comp.setBackground(selectedBackground);
+                comp.setForeground(selectedForeground);
+            } else {
+                comp.setBackground(CodeArea.BACKGROUND);
+                comp.setForeground(foreground);
+            }
+        }
 
-		@Override
-		public Void doInBackground() {
-			try {
-				BackgroundWorker backgroundWorker = mainWindow.getBackgroundWorker();
-				if (backgroundWorker == null) {
-					return null;
-				}
-				backgroundWorker.exec();
+        private Component makeCell(JNode node, int column) {
+            if (column == 0) {
+                JLabel label = new JLabel(node.makeLongString() + "  ", node.getIcon(), SwingConstants.LEFT);
+                label.setOpaque(true);
+                label.setToolTipText(label.getText());
+                return label;
+            }
+            if (!node.hasDescString()) {
+                return emptyLabel;
+            }
+            RSyntaxTextArea textArea = new RSyntaxTextArea();
+            textArea.setFont(codeFont);
+            textArea.setEditable(false);
+            textArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JAVA);
+            textArea.setText("  " + node.makeDescString());
+            textArea.setRows(1);
+            textArea.setColumns(textArea.getText().length());
+            if (highlightText != null) {
+                SearchContext searchContext = new SearchContext(highlightText);
+                searchContext.setMatchCase(true);
+                searchContext.setMarkAll(true);
+                SearchEngine.markAll(textArea, searchContext);
+            }
+            return textArea;
+        }
 
-				DecompileJob decompileJob = cache.getDecompileJob();
-				progressPane.changeLabel(this, decompileJob.getInfoString());
-				decompileJob.processAndWait();
+        public void clear() {
+            componentCache.clear();
+        }
+    }
 
-				BackgroundJob indexJob = cache.getIndexJob();
-				progressPane.changeLabel(this, indexJob.getInfoString());
-				indexJob.processAndWait();
-			} catch (Exception e) {
-				LOG.error("Waiting background tasks failed", e);
-			}
-			return null;
-		}
+    private class LoadTask extends SwingWorker<Void, Void> {
+        public LoadTask() {
+            loadStartCommon();
+            loadStart();
+        }
 
-		@Override
-		public void done() {
-			loadFinishedCommon();
-			loadFinished();
-		}
-	}
+        @Override
+        public Void doInBackground() {
+            try {
+                BackgroundWorker backgroundWorker = mainWindow.getBackgroundWorker();
+                if (backgroundWorker == null) {
+                    return null;
+                }
+                backgroundWorker.exec();
 
-	protected void loadStartCommon() {
-		setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-		progressPane.setIndeterminate(true);
-		progressPane.setVisible(true);
-		resultsTable.setEnabled(false);
-		warnLabel.setVisible(false);
-	}
+                DecompileJob decompileJob = cache.getDecompileJob();
+                progressPane.changeLabel(this, decompileJob.getInfoString());
+                decompileJob.processAndWait();
 
-	private void loadFinishedCommon() {
-		setCursor(null);
-		resultsTable.setEnabled(true);
-		progressPane.setVisible(false);
+                BackgroundJob indexJob = cache.getIndexJob();
+                progressPane.changeLabel(this, indexJob.getInfoString());
+                indexJob.processAndWait();
+            } catch (Exception e) {
+                LOG.error("Waiting background tasks failed", e);
+            }
+            return null;
+        }
 
-		TextSearchIndex textIndex = cache.getTextIndex();
-		if (textIndex == null) {
-			warnLabel.setText("Index not initialized, search will be disabled!");
-			warnLabel.setVisible(true);
-		}
-	}
-
-	protected abstract void loadFinished();
-
-	protected abstract void loadStart();
+        @Override
+        public void done() {
+            loadFinishedCommon();
+            loadFinished();
+        }
+    }
 
 }

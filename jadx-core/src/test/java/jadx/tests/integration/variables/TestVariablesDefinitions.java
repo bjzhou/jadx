@@ -1,14 +1,14 @@
 package jadx.tests.integration.variables;
 
+import org.junit.Test;
+import org.slf4j.Logger;
+
+import java.util.List;
+
 import jadx.core.dex.nodes.ClassNode;
 import jadx.core.dex.visitors.DepthTraversal;
 import jadx.core.dex.visitors.IDexTreeVisitor;
 import jadx.tests.api.IntegrationTest;
-
-import java.util.List;
-
-import org.junit.Test;
-import org.slf4j.Logger;
 
 import static jadx.tests.api.utils.JadxMatchers.containsOne;
 import static org.hamcrest.CoreMatchers.containsString;
@@ -17,29 +17,29 @@ import static org.junit.Assert.assertThat;
 
 public class TestVariablesDefinitions extends IntegrationTest {
 
-	public static class TestCls {
-		private static Logger LOG;
-		private ClassNode cls;
-		private List<IDexTreeVisitor> passes;
+    @Test
+    public void test() {
+        ClassNode cls = getClassNode(TestCls.class);
+        String code = cls.getCode().toString();
 
-		public void run() {
-			try {
-				cls.load();
-				for (IDexTreeVisitor pass : this.passes) {
-					DepthTraversal.visit(pass, cls);
-				}
-			} catch (Exception e) {
-				LOG.error("Decode exception: {}", cls, e);
-			}
-		}
-	}
+        assertThat(code, containsOne(indent(3) + "for (IDexTreeVisitor pass : this.passes) {"));
+        assertThat(code, not(containsString("iterator;")));
+    }
 
-	@Test
-	public void test() {
-		ClassNode cls = getClassNode(TestCls.class);
-		String code = cls.getCode().toString();
+    public static class TestCls {
+        private static Logger LOG;
+        private ClassNode cls;
+        private List<IDexTreeVisitor> passes;
 
-		assertThat(code, containsOne(indent(3) + "for (IDexTreeVisitor pass : this.passes) {"));
-		assertThat(code, not(containsString("iterator;")));
-	}
+        public void run() {
+            try {
+                cls.load();
+                for (IDexTreeVisitor pass : this.passes) {
+                    DepthTraversal.visit(pass, cls);
+                }
+            } catch (Exception e) {
+                LOG.error("Decode exception: {}", cls, e);
+            }
+        }
+    }
 }

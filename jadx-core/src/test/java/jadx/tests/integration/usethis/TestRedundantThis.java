@@ -9,32 +9,32 @@ import static org.junit.Assert.assertThat;
 
 public class TestRedundantThis extends IntegrationTest {
 
-	public static class TestCls {
-		public int field1 = 1;
-		public int field2 = 2;
+    // @Test
+    public void test() {
+        ClassNode cls = getClassNode(TestCls.class);
+        String code = cls.getCode().toString();
 
-		public boolean f1() {
-			return false;
-		}
+        assertThat(code, not(containsString("this.f1();")));
+        assertThat(code, not(containsString("return this.field1;")));
 
-		public int method() {
-			f1();
-			return field1;
-		}
+        assertThat(code, containsString("this.field2 = field2;"));
+    }
 
-		public void method2(int field2) {
-			this.field2 = field2;
-		}
-	}
+    public static class TestCls {
+        public int field1 = 1;
+        public int field2 = 2;
 
-	// @Test
-	public void test() {
-		ClassNode cls = getClassNode(TestCls.class);
-		String code = cls.getCode().toString();
+        public boolean f1() {
+            return false;
+        }
 
-		assertThat(code, not(containsString("this.f1();")));
-		assertThat(code, not(containsString("return this.field1;")));
+        public int method() {
+            f1();
+            return field1;
+        }
 
-		assertThat(code, containsString("this.field2 = field2;"));
-	}
+        public void method2(int field2) {
+            this.field2 = field2;
+        }
+    }
 }

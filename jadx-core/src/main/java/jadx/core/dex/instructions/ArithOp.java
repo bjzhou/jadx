@@ -1,28 +1,28 @@
 package jadx.core.dex.instructions;
 
 public enum ArithOp {
-	ADD("+"),
-	SUB("-"),
-	MUL("*"),
-	DIV("/"),
-	REM("%"),
+    ADD("+"),
+    SUB("-"),
+    MUL("*"),
+    DIV("/"),
+    REM("%"),
 
-	AND("&"),
-	OR("|"),
-	XOR("^"),
+    AND("&"),
+    OR("|"),
+    XOR("^"),
 
-	SHL("<<"),
-	SHR(">>"),
-	USHR(">>>");
+    SHL("<<"),
+    SHR(">>"),
+    USHR(">>>");
 
-	private final String symbol;
+    private final String symbol;
 
-	ArithOp(String symbol) {
-		this.symbol = symbol;
-	}
+    ArithOp(String symbol) {
+        this.symbol = symbol;
+    }
 
-	public String getSymbol() {
-		return this.symbol;
-	}
+    public String getSymbol() {
+        return this.symbol;
+    }
 
 }

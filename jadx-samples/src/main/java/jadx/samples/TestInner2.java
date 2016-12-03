@@ -4,84 +4,80 @@ import java.lang.reflect.Method;
 
 public class TestInner2 extends AbstractTest {
 
-	private String a;
+    // value from java.lang.reflect.Modifier
+    static final int SYNTHETIC = 0x00001000;
+    private static String b;
+    private static String d;
+    private String a;
+    private String c;
 
-	public class A {
-		public A() {
-			a = "a";
-		}
+    private static void setD(String s) {
+        d = s;
+    }
 
-		public String a() {
-			return a;
-		}
-	}
+    public static void main(String[] args) throws Exception {
+        new TestInner2().testRun();
+    }
 
-	private static String b;
+    private void setC(String c) {
+        this.c = c;
+    }
 
-	public static class B {
-		public B() {
-			b = "b";
-		}
+    @Override
+    public boolean testRun() throws Exception {
+        assertTrue((new A()).a().equals("a"));
+        assertTrue(a.equals("a"));
 
-		public String b() {
-			return b;
-		}
-	}
+        assertTrue((new B()).b().equals("b"));
+        assertTrue(b.equals("b"));
 
-	private String c;
+        assertTrue((new C()).c().equals("c"));
+        assertTrue(c.equals("c"));
 
-	private void setC(String c) {
-		this.c = c;
-	}
+        assertTrue((new D()).d().equals("d"));
+        assertTrue(d.equals("d"));
 
-	public class C {
-		public String c() {
-			setC("c");
-			return c;
-		}
-	}
+        Method[] mths = TestInner2.class.getDeclaredMethods();
+        for (Method mth : mths) {
+            if (mth.getName().startsWith("access$")) {
+                int modifiers = mth.getModifiers();
+                assertTrue((modifiers & SYNTHETIC) != 0, "Synthetic methods must be removed");
+            }
+        }
+        return true;
+    }
 
-	private static String d;
+    public static class B {
+        public B() {
+            b = "b";
+        }
 
-	private static void setD(String s) {
-		d = s;
-	}
+        public String b() {
+            return b;
+        }
+    }
 
-	public static class D {
-		public String d() {
-			setD("d");
-			return d;
-		}
-	}
+    public static class D {
+        public String d() {
+            setD("d");
+            return d;
+        }
+    }
 
-	// value from java.lang.reflect.Modifier
-	static final int SYNTHETIC = 0x00001000;
+    public class A {
+        public A() {
+            a = "a";
+        }
 
-	@Override
-	public boolean testRun() throws Exception {
-		assertTrue((new A()).a().equals("a"));
-		assertTrue(a.equals("a"));
+        public String a() {
+            return a;
+        }
+    }
 
-		assertTrue((new B()).b().equals("b"));
-		assertTrue(b.equals("b"));
-
-		assertTrue((new C()).c().equals("c"));
-		assertTrue(c.equals("c"));
-
-		assertTrue((new D()).d().equals("d"));
-		assertTrue(d.equals("d"));
-
-		Method[] mths = TestInner2.class.getDeclaredMethods();
-		for (Method mth : mths) {
-			if (mth.getName().startsWith("access$")) {
-				int modifiers = mth.getModifiers();
-				assertTrue((modifiers & SYNTHETIC) != 0, "Synthetic methods must be removed");
-			}
-		}
-		return true;
-	}
-
-	public static void main(String[] args) throws Exception {
-		new TestInner2().testRun();
-	}
+    public class C {
+        public String c() {
+            setC("c");
+            return c;
+        }
+    }
 }

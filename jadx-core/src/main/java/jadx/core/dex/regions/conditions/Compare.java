@@ -6,44 +6,44 @@ import jadx.core.dex.instructions.args.InsnArg;
 import jadx.core.dex.instructions.args.LiteralArg;
 
 public final class Compare {
-	private final IfNode insn;
+    private final IfNode insn;
 
-	public Compare(IfNode insn) {
-		this.insn = insn;
-	}
+    public Compare(IfNode insn) {
+        this.insn = insn;
+    }
 
-	public IfOp getOp() {
-		return insn.getOp();
-	}
+    public IfOp getOp() {
+        return insn.getOp();
+    }
 
-	public InsnArg getA() {
-		return insn.getArg(0);
-	}
+    public InsnArg getA() {
+        return insn.getArg(0);
+    }
 
-	public InsnArg getB() {
-		return insn.getArg(1);
-	}
+    public InsnArg getB() {
+        return insn.getArg(1);
+    }
 
-	public IfNode getInsn() {
-		return insn;
-	}
+    public IfNode getInsn() {
+        return insn;
+    }
 
-	public Compare invert() {
-		insn.invertCondition();
-		return this;
-	}
+    public Compare invert() {
+        insn.invertCondition();
+        return this;
+    }
 
-	/**
-	 * Change 'a != false' to 'a == true'
-	 */
-	public void normalize() {
-		if (getOp() == IfOp.NE && getB().isLiteral() && getB().equals(LiteralArg.FALSE)) {
-			insn.changeCondition(IfOp.EQ, getA(), LiteralArg.TRUE);
-		}
-	}
+    /**
+     * Change 'a != false' to 'a == true'
+     */
+    public void normalize() {
+        if (getOp() == IfOp.NE && getB().isLiteral() && getB().equals(LiteralArg.FALSE)) {
+            insn.changeCondition(IfOp.EQ, getA(), LiteralArg.TRUE);
+        }
+    }
 
-	@Override
-	public String toString() {
-		return getA() + " " + getOp().getSymbol() + " " + getB();
-	}
+    @Override
+    public String toString() {
+        return getA() + " " + getOp().getSymbol() + " " + getB();
+    }
 }

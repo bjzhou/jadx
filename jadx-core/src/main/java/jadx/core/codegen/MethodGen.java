@@ -1,5 +1,13 @@
 package jadx.core.codegen;
 
+import com.android.dx.rop.code.AccessFlags;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Iterator;
+import java.util.List;
+
 import jadx.core.dex.attributes.AFlag;
 import jadx.core.dex.attributes.AType;
 import jadx.core.dex.attributes.annotations.MethodParameters;
@@ -20,233 +28,225 @@ import jadx.core.utils.Utils;
 import jadx.core.utils.exceptions.CodegenException;
 import jadx.core.utils.exceptions.DecodeException;
 
-import java.util.Iterator;
-import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.android.dx.rop.code.AccessFlags;
-
 public class MethodGen {
-	private static final Logger LOG = LoggerFactory.getLogger(MethodGen.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MethodGen.class);
 
-	private final MethodNode mth;
-	private final ClassGen classGen;
-	private final AnnotationGen annotationGen;
-	private final NameGen nameGen;
+    private final MethodNode mth;
+    private final ClassGen classGen;
+    private final AnnotationGen annotationGen;
+    private final NameGen nameGen;
 
-	public MethodGen(ClassGen classGen, MethodNode mth) {
-		this.mth = mth;
-		this.classGen = classGen;
-		this.annotationGen = classGen.getAnnotationGen();
-		this.nameGen = new NameGen(mth, classGen.isFallbackMode());
-	}
+    public MethodGen(ClassGen classGen, MethodNode mth) {
+        this.mth = mth;
+        this.classGen = classGen;
+        this.annotationGen = classGen.getAnnotationGen();
+        this.nameGen = new NameGen(mth, classGen.isFallbackMode());
+    }
 
-	public ClassGen getClassGen() {
-		return classGen;
-	}
+    public static void addFallbackInsns(CodeWriter code, MethodNode mth, InsnNode[] insnArr, boolean addLabels) {
+        InsnGen insnGen = new InsnGen(getFallbackMethodGen(mth), true);
+        for (InsnNode insn : insnArr) {
+            if (insn == null || insn.getType() == InsnType.NOP) {
+                continue;
+            }
+            if (addLabels && (insn.contains(AType.JUMP) || insn.contains(AType.EXC_HANDLER))) {
+                code.decIndent();
+                code.startLine(getLabelName(insn.getOffset()) + ":");
+                code.incIndent();
+            }
+            try {
+                if (insnGen.makeInsn(insn, code)) {
+                    CatchAttr catchAttr = insn.get(AType.CATCH_BLOCK);
+                    if (catchAttr != null) {
+                        code.add("\t " + catchAttr);
+                    }
+                }
+            } catch (CodegenException e) {
+                LOG.debug("Error generate fallback instruction: ", e.getCause());
+                code.startLine("// error: " + insn);
+            }
+        }
+    }
 
-	public NameGen getNameGen() {
-		return nameGen;
-	}
+    /**
+     * Return fallback variant of method codegen
+     */
+    public static MethodGen getFallbackMethodGen(MethodNode mth) {
+        ClassGen clsGen = new ClassGen(mth.getParentClass(), null, true, true);
+        return new MethodGen(clsGen, mth);
+    }
 
-	public MethodNode getMethodNode() {
-		return mth;
-	}
+    public static String getLabelName(int offset) {
+        return "L_" + InsnUtils.formatOffset(offset);
+    }
 
-	public boolean addDefinition(CodeWriter code) {
-		if (mth.getMethodInfo().isClassInit()) {
-			code.attachDefinition(mth);
-			code.startLine("static");
-			return true;
-		}
-		if (mth.contains(AFlag.ANONYMOUS_CONSTRUCTOR)) {
-			// don't add method name and arguments
-			code.startLine();
-			code.attachDefinition(mth);
-			return false;
-		}
-		annotationGen.addForMethod(code, mth);
+    public ClassGen getClassGen() {
+        return classGen;
+    }
 
-		AccessInfo clsAccFlags = mth.getParentClass().getAccessFlags();
-		AccessInfo ai = mth.getAccessFlags();
-		// don't add 'abstract' and 'public' to methods in interface
-		if (clsAccFlags.isInterface()) {
-			ai = ai.remove(AccessFlags.ACC_ABSTRACT);
-			ai = ai.remove(AccessFlags.ACC_PUBLIC);
-		}
-		// don't add 'public' for annotations
-		if (clsAccFlags.isAnnotation()) {
-			ai = ai.remove(AccessFlags.ACC_PUBLIC);
-		}
-		code.startLineWithNum(mth.getSourceLine());
-		code.add(ai.makeString());
+    public NameGen getNameGen() {
+        return nameGen;
+    }
 
-		if (classGen.addGenericMap(code, mth.getGenericMap())) {
-			code.add(' ');
-		}
-		if (mth.getAccessFlags().isConstructor()) {
-			code.attachDefinition(mth);
-			code.add(classGen.getClassNode().getShortName()); // constructor
-		} else {
-			classGen.useType(code, mth.getReturnType());
-			code.add(' ');
-			code.attachDefinition(mth);
-			code.add(mth.getAlias());
-		}
-		code.add('(');
+    public MethodNode getMethodNode() {
+        return mth;
+    }
 
-		List<RegisterArg> args = mth.getArguments(false);
-		if (mth.getMethodInfo().isConstructor()
-				&& mth.getParentClass().contains(AType.ENUM_CLASS)) {
-			if (args.size() == 2) {
-				args.clear();
-			} else if (args.size() > 2) {
-				args = args.subList(2, args.size());
-			} else {
-				LOG.warn(ErrorsCounter.formatErrorMsg(mth,
-						"Incorrect number of args for enum constructor: " + args.size()
-								+ " (expected >= 2)"
-				));
-			}
-		}
-		addMethodArguments(code, args);
-		code.add(')');
+    public boolean addDefinition(CodeWriter code) {
+        if (mth.getMethodInfo().isClassInit()) {
+            code.attachDefinition(mth);
+            code.startLine("static");
+            return true;
+        }
+        if (mth.contains(AFlag.ANONYMOUS_CONSTRUCTOR)) {
+            // don't add method name and arguments
+            code.startLine();
+            code.attachDefinition(mth);
+            return false;
+        }
+        annotationGen.addForMethod(code, mth);
 
-		annotationGen.addThrows(mth, code);
-		return true;
-	}
+        AccessInfo clsAccFlags = mth.getParentClass().getAccessFlags();
+        AccessInfo ai = mth.getAccessFlags();
+        // don't add 'abstract' and 'public' to methods in interface
+        if (clsAccFlags.isInterface()) {
+            ai = ai.remove(AccessFlags.ACC_ABSTRACT);
+            ai = ai.remove(AccessFlags.ACC_PUBLIC);
+        }
+        // don't add 'public' for annotations
+        if (clsAccFlags.isAnnotation()) {
+            ai = ai.remove(AccessFlags.ACC_PUBLIC);
+        }
+        code.startLineWithNum(mth.getSourceLine());
+        code.add(ai.makeString());
 
-	private void addMethodArguments(CodeWriter argsCode, List<RegisterArg> args) {
-		MethodParameters paramsAnnotation = mth.get(AType.ANNOTATION_MTH_PARAMETERS);
-		int i = 0;
-		for (Iterator<RegisterArg> it = args.iterator(); it.hasNext(); ) {
-			RegisterArg arg = it.next();
+        if (classGen.addGenericMap(code, mth.getGenericMap())) {
+            code.add(' ');
+        }
+        if (mth.getAccessFlags().isConstructor()) {
+            code.attachDefinition(mth);
+            code.add(classGen.getClassNode().getShortName()); // constructor
+        } else {
+            classGen.useType(code, mth.getReturnType());
+            code.add(' ');
+            code.attachDefinition(mth);
+            code.add(mth.getAlias());
+        }
+        code.add('(');
 
-			// add argument annotation
-			if (paramsAnnotation != null) {
-				annotationGen.addForParameter(argsCode, paramsAnnotation, i);
-			}
-			SSAVar argSVar = arg.getSVar();
-			if (argSVar!= null && argSVar.contains(AFlag.FINAL)) {
-				argsCode.add("final ");
-			}
-			if (!it.hasNext() && mth.getAccessFlags().isVarArgs()) {
-				// change last array argument to varargs
-				ArgType type = arg.getType();
-				if (type.isArray()) {
-					ArgType elType = type.getArrayElement();
-					classGen.useType(argsCode, elType);
-					argsCode.add("...");
-				} else {
-					LOG.warn(ErrorsCounter.formatErrorMsg(mth, "Last argument in varargs method not array"));
-					classGen.useType(argsCode, arg.getType());
-				}
-			} else {
-				classGen.useType(argsCode, arg.getType());
-			}
-			argsCode.add(' ');
-			argsCode.add(nameGen.assignArg(arg));
+        List<RegisterArg> args = mth.getArguments(false);
+        if (mth.getMethodInfo().isConstructor()
+                && mth.getParentClass().contains(AType.ENUM_CLASS)) {
+            if (args.size() == 2) {
+                args.clear();
+            } else if (args.size() > 2) {
+                args = args.subList(2, args.size());
+            } else {
+                LOG.warn(ErrorsCounter.formatErrorMsg(mth,
+                        "Incorrect number of args for enum constructor: " + args.size()
+                                + " (expected >= 2)"
+                ));
+            }
+        }
+        addMethodArguments(code, args);
+        code.add(')');
 
-			i++;
-			if (it.hasNext()) {
-				argsCode.add(", ");
-			}
-		}
-	}
+        annotationGen.addThrows(mth, code);
+        return true;
+    }
 
-	public void addInstructions(CodeWriter code) throws CodegenException {
-		if (mth.contains(AType.JADX_ERROR)
-				|| mth.contains(AFlag.INCONSISTENT_CODE)
-				|| mth.getRegion() == null) {
-			JadxErrorAttr err = mth.get(AType.JADX_ERROR);
-			if (err != null) {
-				code.startLine("/* JADX: method processing error */");
-				Throwable cause = err.getCause();
-				if (cause != null) {
-					code.newLine();
-					code.add("/*");
-					code.newLine().add("Error: ").add(Utils.getStackTrace(cause));
-					code.add("*/");
-				}
-			}
-			code.startLine("/*");
-			addFallbackMethodCode(code);
-			code.startLine("*/");
+    private void addMethodArguments(CodeWriter argsCode, List<RegisterArg> args) {
+        MethodParameters paramsAnnotation = mth.get(AType.ANNOTATION_MTH_PARAMETERS);
+        int i = 0;
+        for (Iterator<RegisterArg> it = args.iterator(); it.hasNext(); ) {
+            RegisterArg arg = it.next();
 
-			code.startLine("throw new UnsupportedOperationException(\"Method not decompiled: ")
-					.add(mth.toString())
-					.add("\");");
-		} else {
-			RegionGen regionGen = new RegionGen(this);
-			regionGen.makeRegion(code, mth.getRegion());
-		}
-	}
+            // add argument annotation
+            if (paramsAnnotation != null) {
+                annotationGen.addForParameter(argsCode, paramsAnnotation, i);
+            }
+            SSAVar argSVar = arg.getSVar();
+            if (argSVar != null && argSVar.contains(AFlag.FINAL)) {
+                argsCode.add("final ");
+            }
+            if (!it.hasNext() && mth.getAccessFlags().isVarArgs()) {
+                // change last array argument to varargs
+                ArgType type = arg.getType();
+                if (type.isArray()) {
+                    ArgType elType = type.getArrayElement();
+                    classGen.useType(argsCode, elType);
+                    argsCode.add("...");
+                } else {
+                    LOG.warn(ErrorsCounter.formatErrorMsg(mth, "Last argument in varargs method not array"));
+                    classGen.useType(argsCode, arg.getType());
+                }
+            } else {
+                classGen.useType(argsCode, arg.getType());
+            }
+            argsCode.add(' ');
+            argsCode.add(nameGen.assignArg(arg));
 
-	public void addFallbackMethodCode(CodeWriter code) {
-		if (mth.getInstructions() == null) {
-			JadxErrorAttr errorAttr = mth.get(AType.JADX_ERROR);
-			if (errorAttr == null
-					|| errorAttr.getCause() == null
-					|| !errorAttr.getCause().getClass().equals(DecodeException.class)) {
-				// load original instructions
-				try {
-					mth.load();
-					DepthTraversal.visit(new FallbackModeVisitor(), mth);
-				} catch (DecodeException e) {
-					LOG.error("Error reload instructions in fallback mode:", e);
-					code.startLine("// Can't load method instructions: " + e.getMessage());
-					return;
-				}
-			}
-		}
-		InsnNode[] insnArr = mth.getInstructions();
-		if (insnArr == null) {
-			code.startLine("// Can't load method instructions.");
-			return;
-		}
-		if (mth.getThisArg() != null) {
-			code.startLine(nameGen.useArg(mth.getThisArg())).add(" = this;");
-		}
-		addFallbackInsns(code, mth, insnArr, true);
-	}
+            i++;
+            if (it.hasNext()) {
+                argsCode.add(", ");
+            }
+        }
+    }
 
-	public static void addFallbackInsns(CodeWriter code, MethodNode mth, InsnNode[] insnArr, boolean addLabels) {
-		InsnGen insnGen = new InsnGen(getFallbackMethodGen(mth), true);
-		for (InsnNode insn : insnArr) {
-			if (insn == null || insn.getType() == InsnType.NOP) {
-				continue;
-			}
-			if (addLabels && (insn.contains(AType.JUMP) || insn.contains(AType.EXC_HANDLER))) {
-				code.decIndent();
-				code.startLine(getLabelName(insn.getOffset()) + ":");
-				code.incIndent();
-			}
-			try {
-				if (insnGen.makeInsn(insn, code)) {
-					CatchAttr catchAttr = insn.get(AType.CATCH_BLOCK);
-					if (catchAttr != null) {
-						code.add("\t " + catchAttr);
-					}
-				}
-			} catch (CodegenException e) {
-				LOG.debug("Error generate fallback instruction: ", e.getCause());
-				code.startLine("// error: " + insn);
-			}
-		}
-	}
+    public void addInstructions(CodeWriter code) throws CodegenException {
+        if (mth.contains(AType.JADX_ERROR)
+                || mth.contains(AFlag.INCONSISTENT_CODE)
+                || mth.getRegion() == null) {
+            JadxErrorAttr err = mth.get(AType.JADX_ERROR);
+            if (err != null) {
+                code.startLine("/* JADX: method processing error */");
+                Throwable cause = err.getCause();
+                if (cause != null) {
+                    code.newLine();
+                    code.add("/*");
+                    code.newLine().add("Error: ").add(Utils.getStackTrace(cause));
+                    code.add("*/");
+                }
+            }
+            code.startLine("/*");
+            addFallbackMethodCode(code);
+            code.startLine("*/");
 
-	/**
-	 * Return fallback variant of method codegen
-	 */
-	public static MethodGen getFallbackMethodGen(MethodNode mth) {
-		ClassGen clsGen = new ClassGen(mth.getParentClass(), null, true, true);
-		return new MethodGen(clsGen, mth);
-	}
+            code.startLine("throw new UnsupportedOperationException(\"Method not decompiled: ")
+                    .add(mth.toString())
+                    .add("\");");
+        } else {
+            RegionGen regionGen = new RegionGen(this);
+            regionGen.makeRegion(code, mth.getRegion());
+        }
+    }
 
-	public static String getLabelName(int offset) {
-		return "L_" + InsnUtils.formatOffset(offset);
-	}
+    public void addFallbackMethodCode(CodeWriter code) {
+        if (mth.getInstructions() == null) {
+            JadxErrorAttr errorAttr = mth.get(AType.JADX_ERROR);
+            if (errorAttr == null
+                    || errorAttr.getCause() == null
+                    || !errorAttr.getCause().getClass().equals(DecodeException.class)) {
+                // load original instructions
+                try {
+                    mth.load();
+                    DepthTraversal.visit(new FallbackModeVisitor(), mth);
+                } catch (DecodeException e) {
+                    LOG.error("Error reload instructions in fallback mode:", e);
+                    code.startLine("// Can't load method instructions: " + e.getMessage());
+                    return;
+                }
+            }
+        }
+        InsnNode[] insnArr = mth.getInstructions();
+        if (insnArr == null) {
+            code.startLine("// Can't load method instructions.");
+            return;
+        }
+        if (mth.getThisArg() != null) {
+            code.startLine(nameGen.useArg(mth.getThisArg())).add(" = this;");
+        }
+        addFallbackInsns(code, mth, insnArr, true);
+    }
 
 }

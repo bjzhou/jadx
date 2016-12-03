@@ -1,38 +1,38 @@
 package jadx.tests.integration.generics;
 
-import jadx.core.dex.nodes.ClassNode;
-import jadx.tests.api.IntegrationTest;
+import org.junit.Test;
 
 import java.util.List;
 
-import org.junit.Test;
+import jadx.core.dex.nodes.ClassNode;
+import jadx.tests.api.IntegrationTest;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertThat;
 
 public class TestGenerics extends IntegrationTest {
 
-	public static class TestCls {
-		class A {
-		}
+    @Test
+    public void test() {
+        ClassNode cls = getClassNode(TestCls.class);
+        String code = cls.getCode().toString();
 
-		public static void mthWildcard(List<?> list) {
-		}
+        assertThat(code, containsString("mthWildcard(List<?> list)"));
+        assertThat(code, containsString("mthExtends(List<? extends A> list)"));
+        assertThat(code, containsString("mthSuper(List<? super A> list)"));
+    }
 
-		public static void mthExtends(List<? extends A> list) {
-		}
+    public static class TestCls {
+        public static void mthWildcard(List<?> list) {
+        }
 
-		public static void mthSuper(List<? super A> list) {
-		}
-	}
+        public static void mthExtends(List<? extends A> list) {
+        }
 
-	@Test
-	public void test() {
-		ClassNode cls = getClassNode(TestCls.class);
-		String code = cls.getCode().toString();
+        public static void mthSuper(List<? super A> list) {
+        }
 
-		assertThat(code, containsString("mthWildcard(List<?> list)"));
-		assertThat(code, containsString("mthExtends(List<? extends A> list)"));
-		assertThat(code, containsString("mthSuper(List<? super A> list)"));
-	}
+        class A {
+        }
+    }
 }

@@ -1,30 +1,30 @@
 package jadx.tests.integration.inline;
 
+import org.junit.Test;
+
 import jadx.core.dex.nodes.ClassNode;
 import jadx.tests.api.IntegrationTest;
-
-import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertThat;
 
 public class TestInline extends IntegrationTest {
 
-	public static class TestCls {
-		public static void main(String[] args) throws Exception {
-			System.out.println("Test: " + new TestCls().testRun());
-		}
+    @Test
+    public void test() {
+        ClassNode cls = getClassNode(TestCls.class);
+        String code = cls.getCode().toString();
 
-		private boolean testRun() {
-			return false;
-		}
-	}
+        assertThat(code, containsString("System.out.println(\"Test: \" + new TestInline$TestCls().testRun());"));
+    }
 
-	@Test
-	public void test() {
-		ClassNode cls = getClassNode(TestCls.class);
-		String code = cls.getCode().toString();
+    public static class TestCls {
+        public static void main(String[] args) throws Exception {
+            System.out.println("Test: " + new TestCls().testRun());
+        }
 
-		assertThat(code, containsString("System.out.println(\"Test: \" + new TestInline$TestCls().testRun());"));
-	}
+        private boolean testRun() {
+            return false;
+        }
+    }
 }

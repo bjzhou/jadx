@@ -1,69 +1,69 @@
 package jadx.tests.integration.conditions;
 
+import org.junit.Test;
+
 import jadx.core.dex.nodes.ClassNode;
 import jadx.tests.api.IntegrationTest;
-
-import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertThat;
 
 public class TestConditions8 extends IntegrationTest {
 
-	public static class TestCls {
-		private TestCls pager;
-		private TestCls listView;
+    @Test
+    public void test() {
+        ClassNode cls = getClassNode(TestCls.class);
+        String code = cls.getCode().toString();
 
-		public void test(TestCls view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
-			if (!isUsable()) {
-				return;
-			}
-			if (!pager.hasMore()) {
-				return;
-			}
-			if (getLoaderManager().hasRunningLoaders()) {
-				return;
-			}
-			if (listView != null
-					&& listView.getLastVisiblePosition() >= pager.size()) {
-				showMore();
-			}
-		}
+        assertThat(code, containsString("showMore();"));
+    }
 
-		private void showMore() {
+    public static class TestCls {
+        private TestCls pager;
+        private TestCls listView;
 
-		}
+        public void test(TestCls view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+            if (!isUsable()) {
+                return;
+            }
+            if (!pager.hasMore()) {
+                return;
+            }
+            if (getLoaderManager().hasRunningLoaders()) {
+                return;
+            }
+            if (listView != null
+                    && listView.getLastVisiblePosition() >= pager.size()) {
+                showMore();
+            }
+        }
 
-		private int size() {
-			return 0;
-		}
+        private void showMore() {
 
-		private int getLastVisiblePosition() {
-			return 0;
-		}
+        }
 
-		private boolean hasRunningLoaders() {
-			return false;
-		}
+        private int size() {
+            return 0;
+        }
 
-		private TestCls getLoaderManager() {
-			return null;
-		}
+        private int getLastVisiblePosition() {
+            return 0;
+        }
 
-		private boolean hasMore() {
-			return false;
-		}
+        private boolean hasRunningLoaders() {
+            return false;
+        }
 
-		private boolean isUsable() {
-			return false;
-		}
-	}
+        private TestCls getLoaderManager() {
+            return null;
+        }
 
-	@Test
-	public void test() {
-		ClassNode cls = getClassNode(TestCls.class);
-		String code = cls.getCode().toString();
+        private boolean hasMore() {
+            return false;
+        }
 
-		assertThat(code, containsString("showMore();"));
-	}
+        private boolean isUsable() {
+            return false;
+        }
+    }
 }

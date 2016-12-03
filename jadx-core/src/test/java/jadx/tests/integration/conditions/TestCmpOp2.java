@@ -1,31 +1,31 @@
 package jadx.tests.integration.conditions;
 
+import org.junit.Test;
+
 import jadx.core.dex.nodes.ClassNode;
 import jadx.tests.api.IntegrationTest;
-
-import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertThat;
 
 public class TestCmpOp2 extends IntegrationTest {
 
-	public static class TestCls {
-		public boolean testGT(float a, float b) {
-			return a > b;
-		}
+    @Test
+    public void test() {
+        ClassNode cls = getClassNode(TestCls.class);
+        String code = cls.getCode().toString();
 
-		public boolean testLT(float c, double d) {
-			return c < d;
-		}
-	}
+        assertThat(code, containsString("return a > b;"));
+        assertThat(code, containsString("return ((double) c) < d;"));
+    }
 
-	@Test
-	public void test() {
-		ClassNode cls = getClassNode(TestCls.class);
-		String code = cls.getCode().toString();
+    public static class TestCls {
+        public boolean testGT(float a, float b) {
+            return a > b;
+        }
 
-		assertThat(code, containsString("return a > b;"));
-		assertThat(code, containsString("return ((double) c) < d;"));
-	}
+        public boolean testLT(float c, double d) {
+            return c < d;
+        }
+    }
 }

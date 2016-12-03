@@ -1,48 +1,47 @@
 package jadx.core.dex.attributes.annotations;
 
-import jadx.core.dex.instructions.args.ArgType;
-
 import java.util.Map;
+
+import jadx.core.dex.instructions.args.ArgType;
 
 public class Annotation {
 
-	public enum Visibility {
-		BUILD, RUNTIME, SYSTEM
-	}
+    private final Visibility visibility;
+    private final ArgType atype;
+    private final Map<String, Object> values;
+    public Annotation(Visibility visibility, ArgType type, Map<String, Object> values) {
+        this.visibility = visibility;
+        this.atype = type;
+        this.values = values;
+    }
 
-	private final Visibility visibility;
-	private final ArgType atype;
-	private final Map<String, Object> values;
+    public Visibility getVisibility() {
+        return visibility;
+    }
 
-	public Annotation(Visibility visibility, ArgType type, Map<String, Object> values) {
-		this.visibility = visibility;
-		this.atype = type;
-		this.values = values;
-	}
+    public ArgType getType() {
+        return atype;
+    }
 
-	public Visibility getVisibility() {
-		return visibility;
-	}
+    public String getAnnotationClass() {
+        return atype.getObject();
+    }
 
-	public ArgType getType() {
-		return atype;
-	}
+    public Map<String, Object> getValues() {
+        return values;
+    }
 
-	public String getAnnotationClass() {
-		return atype.getObject();
-	}
+    public Object getDefaultValue() {
+        return values.get("value");
+    }
 
-	public Map<String, Object> getValues() {
-		return values;
-	}
+    @Override
+    public String toString() {
+        return "Annotation[" + visibility + ", " + atype + ", " + values + "]";
+    }
 
-	public Object getDefaultValue() {
-		return values.get("value");
-	}
-
-	@Override
-	public String toString() {
-		return "Annotation[" + visibility + ", " + atype + ", " + values + "]";
-	}
+    public enum Visibility {
+        BUILD, RUNTIME, SYSTEM
+    }
 
 }

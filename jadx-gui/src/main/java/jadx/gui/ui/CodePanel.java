@@ -1,70 +1,74 @@
 package jadx.gui.ui;
 
-import jadx.gui.treemodel.JNode;
-import jadx.gui.utils.Utils;
-
-import javax.swing.*;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 
+import javax.swing.AbstractAction;
+import javax.swing.JScrollPane;
+import javax.swing.KeyStroke;
+
+import jadx.gui.treemodel.JNode;
+import jadx.gui.utils.Utils;
+
 class CodePanel extends ContentPanel {
 
-	private static final long serialVersionUID = 5310536092010045565L;
+    private static final long serialVersionUID = 5310536092010045565L;
 
-	private final SearchBar searchBar;
-	private final CodeArea codeArea;
-	private final JScrollPane scrollPane;
+    private final SearchBar searchBar;
+    private final CodeArea codeArea;
+    private final JScrollPane scrollPane;
 
-	CodePanel(TabbedPane panel, JNode jnode) {
-		super(panel, jnode);
+    CodePanel(TabbedPane panel, JNode jnode) {
+        super(panel, jnode);
 
-		codeArea = new CodeArea(this);
-		searchBar = new SearchBar(codeArea);
+        codeArea = new CodeArea(this);
+        searchBar = new SearchBar(codeArea);
 
-		scrollPane = new JScrollPane(codeArea);
-		scrollPane.setRowHeaderView(new LineNumbers(codeArea));
+        scrollPane = new JScrollPane(codeArea);
+        scrollPane.setRowHeaderView(new LineNumbers(codeArea));
 
-		setLayout(new BorderLayout());
-		add(searchBar, BorderLayout.NORTH);
-		add(scrollPane);
+        setLayout(new BorderLayout());
+        add(searchBar, BorderLayout.NORTH);
+        add(scrollPane);
 
-		int shortcut = Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
-		KeyStroke key = KeyStroke.getKeyStroke(KeyEvent.VK_F, shortcut);
-		Utils.addKeyBinding(codeArea, key, "SearchAction", new SearchAction());
-	}
+        int shortcut = Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
+        KeyStroke key = KeyStroke.getKeyStroke(KeyEvent.VK_F, shortcut);
+        Utils.addKeyBinding(codeArea, key, "SearchAction", new SearchAction());
+    }
 
-	private class SearchAction extends AbstractAction {
-		private static final long serialVersionUID = 8650568214755387093L;
+    @Override
+    public void loadSettings() {
+        codeArea.loadSettings();
+    }
 
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			searchBar.toggle();
-		}
-	}
+    TabbedPane getTabbedPane() {
+        return tabbedPane;
+    }
 
-	@Override
-	public void loadSettings() {
-		codeArea.loadSettings();
-	}
+    JNode getNode() {
+        return node;
+    }
 
-	TabbedPane getTabbedPane() {
-		return tabbedPane;
-	}
+    SearchBar getSearchBar() {
+        return searchBar;
+    }
 
-	JNode getNode() {
-		return node;
-	}
+    CodeArea getCodeArea() {
+        return codeArea;
+    }
 
-	SearchBar getSearchBar() {
-		return searchBar;
-	}
+    JScrollPane getScrollPane() {
+        return scrollPane;
+    }
 
-	CodeArea getCodeArea() {
-		return codeArea;
-	}
+    private class SearchAction extends AbstractAction {
+        private static final long serialVersionUID = 8650568214755387093L;
 
-	JScrollPane getScrollPane() {
-		return scrollPane;
-	}
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            searchBar.toggle();
+        }
+    }
 }

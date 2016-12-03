@@ -1,5 +1,8 @@
 package jadx.core.dex.attributes.nodes;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import jadx.core.dex.attributes.AType;
 import jadx.core.dex.attributes.IAttribute;
 import jadx.core.dex.info.FieldInfo;
@@ -7,76 +10,72 @@ import jadx.core.dex.instructions.mods.ConstructorInsn;
 import jadx.core.dex.nodes.ClassNode;
 import jadx.core.dex.nodes.MethodNode;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class EnumClassAttr implements IAttribute {
 
-	public static class EnumField {
-		private final FieldInfo field;
-		private final ConstructorInsn constrInsn;
-		private final int startArg;
-		private ClassNode cls;
+    private final List<EnumField> fields;
+    private MethodNode staticMethod;
+    public EnumClassAttr(int fieldsCount) {
+        this.fields = new ArrayList<EnumField>(fieldsCount);
+    }
 
-		public EnumField(FieldInfo field, ConstructorInsn co, int startArg) {
-			this.field = field;
-			this.constrInsn = co;
-			this.startArg = startArg;
-		}
+    public List<EnumField> getFields() {
+        return fields;
+    }
 
-		public FieldInfo getField() {
-			return field;
-		}
+    public MethodNode getStaticMethod() {
+        return staticMethod;
+    }
 
-		public ConstructorInsn getConstrInsn() {
-			return constrInsn;
-		}
+    public void setStaticMethod(MethodNode staticMethod) {
+        this.staticMethod = staticMethod;
+    }
 
-		public int getStartArg() {
-			return startArg;
-		}
+    @Override
+    public AType<EnumClassAttr> getType() {
+        return AType.ENUM_CLASS;
+    }
 
-		public ClassNode getCls() {
-			return cls;
-		}
+    @Override
+    public String toString() {
+        return "Enum fields: " + fields;
+    }
 
-		public void setCls(ClassNode cls) {
-			this.cls = cls;
-		}
+    public static class EnumField {
+        private final FieldInfo field;
+        private final ConstructorInsn constrInsn;
+        private final int startArg;
+        private ClassNode cls;
 
-		@Override
-		public String toString() {
-			return field + "(" + constrInsn + ") " + cls;
-		}
-	}
+        public EnumField(FieldInfo field, ConstructorInsn co, int startArg) {
+            this.field = field;
+            this.constrInsn = co;
+            this.startArg = startArg;
+        }
 
-	private final List<EnumField> fields;
-	private MethodNode staticMethod;
+        public FieldInfo getField() {
+            return field;
+        }
 
-	public EnumClassAttr(int fieldsCount) {
-		this.fields = new ArrayList<EnumField>(fieldsCount);
-	}
+        public ConstructorInsn getConstrInsn() {
+            return constrInsn;
+        }
 
-	public List<EnumField> getFields() {
-		return fields;
-	}
+        public int getStartArg() {
+            return startArg;
+        }
 
-	public MethodNode getStaticMethod() {
-		return staticMethod;
-	}
+        public ClassNode getCls() {
+            return cls;
+        }
 
-	public void setStaticMethod(MethodNode staticMethod) {
-		this.staticMethod = staticMethod;
-	}
+        public void setCls(ClassNode cls) {
+            this.cls = cls;
+        }
 
-	@Override
-	public AType<EnumClassAttr> getType() {
-		return AType.ENUM_CLASS;
-	}
-
-	@Override
-	public String toString() {
-		return "Enum fields: " + fields;
-	}
+        @Override
+        public String toString() {
+            return field + "(" + constrInsn + ") " + cls;
+        }
+    }
 
 }

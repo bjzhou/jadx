@@ -10,93 +10,93 @@ import java.util.Arrays;
 
 public class TestAnnotations extends AbstractTest {
 
-	@Deprecated
-	public int a;
+    @Deprecated
+    public int a;
 
-	public void error() throws Exception {
-		throw new Exception("error");
-	}
+    @Deprecated
+    public static Object depr(String[] a) {
+        return Arrays.asList(a);
+    }
 
-	@Deprecated
-	public static Object depr(String[] a) {
-		return Arrays.asList(a);
-	}
+    @MyAnnotation(name = "b",
+            num = 7,
+            cls = Exception.class,
+            doubles = {0.0, 1.1},
+            value = 9.87f,
+            simple = @SimpleAnnotation(false))
+    public static Object test(String[] a) {
+        return Arrays.asList(a);
+    }
 
-	public @interface SimpleAnnotation {
-		boolean value();
-	}
+    public static Object test2(@Deprecated String a, @SimpleAnnotation(value = false) Object b) {
+        @Deprecated
+        Object c = a;
+        return c;
+    }
 
-	@Documented
-	@Retention(RetentionPolicy.RUNTIME)
-	@Target(ElementType.METHOD)
-	public @interface MyAnnotation {
-		String name() default "a";
+    @ClassesAnnotation({
+            int.class, int[].class, int[][][].class,
+            String.class, String[].class, String[][].class
+    })
+    public static Object test3(Object b) {
+        return b.toString();
+    }
 
-		String str() default "str";
+    public static void main(String[] args) throws Exception {
+        new TestAnnotations().testRun();
+    }
 
-		int num();
+    public void error() throws Exception {
+        throw new Exception("error");
+    }
 
-		float value();
+    @Override
+    public boolean testRun() throws Exception {
+        Class<?> cls = TestAnnotations.class;
+        new Thread();
 
-		double[] doubles();
+        Method err = cls.getMethod("error");
+        assertTrue(err.getExceptionTypes().length > 0);
+        assertTrue(err.getExceptionTypes()[0] == Exception.class);
 
-		Class<?> cls();
+        Method d = cls.getMethod("depr", String[].class);
+        assertTrue(d.getAnnotations().length > 0);
+        assertTrue(d.getAnnotations()[0].annotationType() == Deprecated.class);
 
-		SimpleAnnotation simple();
+        Method ma = cls.getMethod("test", String[].class);
+        assertTrue(ma.getAnnotations().length > 0);
+        MyAnnotation a = (MyAnnotation) ma.getAnnotations()[0];
+        assertTrue(a.num() == 7);
+        assertTrue(a.state() == Thread.State.TERMINATED);
+        return true;
+    }
 
-		Thread.State state() default Thread.State.TERMINATED;
-	}
+    public @interface SimpleAnnotation {
+        boolean value();
+    }
 
-	@MyAnnotation(name = "b",
-			num = 7,
-			cls = Exception.class,
-			doubles = {0.0, 1.1},
-			value = 9.87f,
-			simple = @SimpleAnnotation(false))
-	public static Object test(String[] a) {
-		return Arrays.asList(a);
-	}
+    @Documented
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.METHOD)
+    public @interface MyAnnotation {
+        String name() default "a";
 
-	public static Object test2(@Deprecated String a, @SimpleAnnotation(value = false) Object b) {
-		@Deprecated
-		Object c = a;
-		return c;
-	}
+        String str() default "str";
 
-	public @interface ClassesAnnotation {
-		Class<?>[] value();
-	}
+        int num();
 
-	@ClassesAnnotation({
-			int.class, int[].class, int[][][].class,
-			String.class, String[].class, String[][].class
-	})
-	public static Object test3(Object b) {
-		return b.toString();
-	}
+        float value();
 
-	@Override
-	public boolean testRun() throws Exception {
-		Class<?> cls = TestAnnotations.class;
-		new Thread();
+        double[] doubles();
 
-		Method err = cls.getMethod("error");
-		assertTrue(err.getExceptionTypes().length > 0);
-		assertTrue(err.getExceptionTypes()[0] == Exception.class);
+        Class<?> cls();
 
-		Method d = cls.getMethod("depr", String[].class);
-		assertTrue(d.getAnnotations().length > 0);
-		assertTrue(d.getAnnotations()[0].annotationType() == Deprecated.class);
+        SimpleAnnotation simple();
 
-		Method ma = cls.getMethod("test", String[].class);
-		assertTrue(ma.getAnnotations().length > 0);
-		MyAnnotation a = (MyAnnotation) ma.getAnnotations()[0];
-		assertTrue(a.num() == 7);
-		assertTrue(a.state() == Thread.State.TERMINATED);
-		return true;
-	}
+        Thread.State state() default Thread.State.TERMINATED;
+    }
 
-	public static void main(String[] args) throws Exception {
-		new TestAnnotations().testRun();
-	}
+    public @interface ClassesAnnotation {
+        Class<?>[] value();
+    }
 }

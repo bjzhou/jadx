@@ -3,65 +3,65 @@ package jadx.samples;
 import java.util.Arrays;
 
 public class TestInvoke extends AbstractTest {
-	private int f;
+    private int f;
 
-	public TestInvoke() {
-		this(-1);
-	}
+    public TestInvoke() {
+        this(-1);
+    }
 
-	public TestInvoke(int f) {
-		this.f = f;
-	}
+    public TestInvoke(int f) {
+        this.f = f;
+    }
 
-	private void parse(String[] args) {
-		if (args.length > 0) {
-			f = Integer.parseInt(args[0]);
-		} else {
-			f = 20;
-		}
-	}
+    public static void main(String[] args) throws Exception {
+        new TestInvoke().testRun();
+    }
 
-	public int getF() {
-		return f;
-	}
+    private void parse(String[] args) {
+        if (args.length > 0) {
+            f = Integer.parseInt(args[0]);
+        } else {
+            f = 20;
+        }
+    }
 
-	private boolean testVarArgs(String s1, String... args) {
-		String str = Arrays.toString(args);
-		return s1.length() + str.length() > 0;
-	}
+    public int getF() {
+        return f;
+    }
 
-	private String testVarArgs2(char[]... args) {
-		String s = "";
-		for (char[] ca : args) {
-			s += new String(ca);
-		}
-		return s;
-	}
+    private boolean testVarArgs(String s1, String... args) {
+        String str = Arrays.toString(args);
+        return s1.length() + str.length() > 0;
+    }
 
-	private String testSameArgTypes(String s1, String s2) {
-		if (s1.equals(s2)) {
-			return null;
-		}
-		return s1;
-	}
+    private String testVarArgs2(char[]... args) {
+        String s = "";
+        for (char[] ca : args) {
+            s += new String(ca);
+        }
+        return s;
+    }
 
-	@Override
-	public boolean testRun() throws Exception {
-		TestInvoke inv = new TestInvoke();
+    private String testSameArgTypes(String s1, String s2) {
+        if (s1.equals(s2)) {
+            return null;
+        }
+        return s1;
+    }
 
-		inv.parse(new String[]{"12", "35"});
-		assertTrue(inv.getF() == 12);
-		inv.parse(new String[0]);
-		assertTrue(inv.getF() == 20);
+    @Override
+    public boolean testRun() throws Exception {
+        TestInvoke inv = new TestInvoke();
 
-		assertTrue(inv.testVarArgs("a", "2", "III"));
-		assertTrue(inv.testVarArgs2("a".toCharArray(), new char[]{'1', '2'}).equals("a12"));
+        inv.parse(new String[]{"12", "35"});
+        assertTrue(inv.getF() == 12);
+        inv.parse(new String[0]);
+        assertTrue(inv.getF() == 20);
 
-		assertEquals(testSameArgTypes("a", "b"), "a");
-		return true;
-	}
+        assertTrue(inv.testVarArgs("a", "2", "III"));
+        assertTrue(inv.testVarArgs2("a".toCharArray(), new char[]{'1', '2'}).equals("a12"));
 
-	public static void main(String[] args) throws Exception {
-		new TestInvoke().testRun();
-	}
+        assertEquals(testSameArgTypes("a", "b"), "a");
+        return true;
+    }
 }

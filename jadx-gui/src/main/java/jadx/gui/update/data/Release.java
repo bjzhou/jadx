@@ -1,58 +1,58 @@
 package jadx.gui.update.data;
 
-import java.util.List;
-
 import com.google.gson.annotations.SerializedName;
 
+import java.util.List;
+
 public class Release {
-	private int id;
-	private String name;
+    private int id;
+    private String name;
 
-	@SerializedName("prerelease")
-	private boolean preRelease;
+    @SerializedName("prerelease")
+    private boolean preRelease;
 
-	private List<Asset> assets;
+    private List<Asset> assets;
 
-	public String getName() {
-		return name;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	public int getId() {
-		return id;
-	}
+    public int getId() {
+        return id;
+    }
 
-	public void setId(int id) {
-		this.id = id;
-	}
+    public void setId(int id) {
+        this.id = id;
+    }
 
-	public boolean isPreRelease() {
-		return preRelease;
-	}
+    public boolean isPreRelease() {
+        return preRelease;
+    }
 
-	public void setPreRelease(boolean preRelease) {
-		this.preRelease = preRelease;
-	}
+    public void setPreRelease(boolean preRelease) {
+        this.preRelease = preRelease;
+    }
 
-	public List<Asset> getAssets() {
-		return assets;
-	}
+    public List<Asset> getAssets() {
+        return assets;
+    }
 
-	public void setAssets(List<Asset> assets) {
-		this.assets = assets;
-	}
+    public void setAssets(List<Asset> assets) {
+        this.assets = assets;
+    }
 
-	@Override
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		sb.append(name);
-		for (Asset asset : getAssets()) {
-			sb.append("\n ");
-			sb.append(asset);
-		}
-		return sb.toString();
-	}
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(name);
+        for (Asset asset : getAssets()) {
+            sb.append("\n ");
+            sb.append(asset);
+        }
+        return sb.toString();
+    }
 }

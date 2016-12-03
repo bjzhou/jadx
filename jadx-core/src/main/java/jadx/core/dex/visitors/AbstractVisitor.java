@@ -7,17 +7,17 @@ import jadx.core.utils.exceptions.JadxException;
 
 public class AbstractVisitor implements IDexTreeVisitor {
 
-	@Override
-	public void init(RootNode root) throws JadxException {
-	}
+    @Override
+    public void init(RootNode root) throws JadxException {
+    }
 
-	@Override
-	public boolean visit(ClassNode cls) throws JadxException {
-		return true;
-	}
+    @Override
+    public boolean visit(ClassNode cls) throws JadxException {
+        return true;
+    }
 
-	@Override
-	public void visit(MethodNode mth) throws JadxException {
-	}
+    @Override
+    public void visit(MethodNode mth) throws JadxException {
+    }
 
 }

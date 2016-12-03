@@ -8,18 +8,18 @@ import jadx.samples.otherpkg.A;
  */
 public class TestImports extends AbstractTest {
 
-	public class C extends A {
-		public B getB() {
-			return null;
-		}
-	}
+    public static void main(String[] args) {
+        new TestImports().testRun();
+    }
 
-	@Override
-	public boolean testRun() {
-		return true;
-	}
+    @Override
+    public boolean testRun() {
+        return true;
+    }
 
-	public static void main(String[] args) {
-		new TestImports().testRun();
-	}
+    public class C extends A {
+        public B getB() {
+            return null;
+        }
+    }
 }

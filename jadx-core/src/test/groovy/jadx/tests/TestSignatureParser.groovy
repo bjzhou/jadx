@@ -69,7 +69,9 @@ class TestSignatureParser extends Specification {
 
     def "generic map"() {
         expect:
-        new SignatureParser(str).consumeGenericMap() == result.collectEntries { [genericType(it.key), it.value] }
+        new SignatureParser(str).consumeGenericMap() == result.collectEntries {
+            [genericType(it.key), it.value]
+        }
 
         where:
         str                                                  | result
