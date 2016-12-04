@@ -29,6 +29,9 @@ public class ManifestAttributes {
     private static final String MANIFEST_ATTR_XML = "/android/attrs_manifest.xml";
     private final Map<String, MAttr> attrMap = new HashMap<String, MAttr>();
 
+    public static int sMinSdkVersion = 15;
+    public static int sTargetSdkVersion = 22;
+
     public ManifestAttributes() throws Exception {
     }
 

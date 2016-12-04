@@ -275,6 +275,12 @@ public class BinaryXMLParser extends CommonBinaryParser {
             decodeAttribute(attributeNS, attrValDataType, attrValData);
         }
         writer.add('"');
+        if (attrName.equals("minSdkVersion")) {
+            ManifestAttributes.sMinSdkVersion = attrValData;
+        }
+        if (attrName.equals("targetSdkVersion")) {
+            ManifestAttributes.sTargetSdkVersion = attrValData;
+        }
     }
 
     private void decodeAttribute(int attributeNS, int attrValDataType, int attrValData) {

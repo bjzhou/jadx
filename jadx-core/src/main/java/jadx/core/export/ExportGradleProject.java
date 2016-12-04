@@ -16,6 +16,7 @@ import jadx.core.dex.nodes.DexNode;
 import jadx.core.dex.nodes.RootNode;
 import jadx.core.utils.exceptions.JadxRuntimeException;
 import jadx.core.utils.files.FileUtils;
+import jadx.core.xmlgen.ManifestAttributes;
 
 public class ExportGradleProject {
 
@@ -62,9 +63,8 @@ public class ExportGradleProject {
             appPackage = "UNKNOWN";
         }
         tmpl.add("applicationId", appPackage);
-        // TODO: load from AndroidManifest.xml
-        tmpl.add("minSdkVersion", 9);
-        tmpl.add("targetSdkVersion", 21);
+        tmpl.add("minSdkVersion", ManifestAttributes.sMinSdkVersion);
+        tmpl.add("targetSdkVersion", ManifestAttributes.sTargetSdkVersion);
         tmpl.save(new File(outDir, "build.gradle"));
     }
 
