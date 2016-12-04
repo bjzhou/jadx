@@ -146,7 +146,10 @@ public class ManifestAttributes {
         } else if (attr.getType() == MAttrType.FLAG) {
             StringBuilder sb = new StringBuilder();
             for (Map.Entry<Long, String> entry : attr.getValues().entrySet()) {
-                if ((value & entry.getKey()) != 0) {
+                if (value == entry.getKey()) {
+                    sb = new StringBuilder(entry.getValue() + "|");
+                    break;
+                } else if ((value & entry.getKey()) == entry.getKey()) {
                     sb.append(entry.getValue()).append('|');
                 }
             }
@@ -154,7 +157,7 @@ public class ManifestAttributes {
                 return sb.deleteCharAt(sb.length() - 1).toString();
             }
         }
-        return "UNKNOWN_DATA_0x" + Long.toHexString(value);
+        return null;
     }
 
     private enum MAttrType {
