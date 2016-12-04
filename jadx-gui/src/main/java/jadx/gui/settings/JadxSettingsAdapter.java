@@ -22,7 +22,6 @@ public class JadxSettingsAdapter {
     private static final String JADX_GUI_KEY = "jadx.gui.settings";
 
     private static final Preferences PREFS = Preferences.userNodeForPackage(JadxGUI.class);
-    private static final Gson GSON = GSON_BUILDER.create();
     private static ExclusionStrategy EXCLUDE_FIELDS = new ExclusionStrategy() {
         @Override
         public boolean shouldSkipField(FieldAttributes f) {
@@ -37,6 +36,7 @@ public class JadxSettingsAdapter {
         }
     };
     private static final GsonBuilder GSON_BUILDER = new GsonBuilder().setExclusionStrategies(EXCLUDE_FIELDS);
+    private static final Gson GSON = GSON_BUILDER.create();
 
     private JadxSettingsAdapter() {
     }
