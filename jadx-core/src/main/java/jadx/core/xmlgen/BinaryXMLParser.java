@@ -305,7 +305,11 @@ public class BinaryXMLParser extends CommonBinaryParser {
                 } else {
                     String resName = resNames.get(attrValData);
                     if (resName != null) {
-                        writer.add("@").add(resName);
+                        writer.add("@");
+                        if (resName.startsWith("id/")) {
+                            writer.add("+");
+                        }
+                        writer.add(resName);
                     } else {
                         writer.add("0x").add(Integer.toHexString(attrValData));
                     }
