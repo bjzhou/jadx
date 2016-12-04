@@ -216,8 +216,7 @@ public class BinaryXMLParser extends CommonBinaryParser {
         int comment = is.readInt32();
         int startNS = is.readInt32();
         int startNSName = is.readInt32(); // actually is elementName...
-        if (!wasOneLiner && !"ERROR".equals(currentTag)
-                && !currentTag.equals(strings[startNSName])) {
+        if (!wasOneLiner && !"ERROR".equals(currentTag)) {
             writer.add(">");
         }
         wasOneLiner = false;
