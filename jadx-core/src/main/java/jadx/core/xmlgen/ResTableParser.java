@@ -244,15 +244,64 @@ public class ResTableParser extends CommonBinaryParser {
 
         int minorVersion = is.readInt16();
 
-        is.readInt8(); // screenLayout
-        is.readInt8(); // uiMode
-        is.readInt16(); // smallestScreenWidthDp
+        int screenLayout = is.readInt8();
+        int uiMode = is.readInt8();
+        int smallestScreenWidthDp = is.readInt16();
 
-        is.readInt16(); // screenWidthDp
-        is.readInt16(); // screenHeightDp
+        int screenWidthDp = is.readInt16();
+        int screenHeightDp = is.readInt16();
+
+        if (screenLayout != 0) {
+            config.setScreenLayout(parseScreenLayout(screenLayout));
+        }
+
+        if (smallestScreenWidthDp != 0) {
+            config.setSmallestScreenWidthDp("sw"+smallestScreenWidthDp+"dp");
+        }
+
+        if (orientation != 0) {
+            config.setOrientation(parseOrientasion(orientation));
+        }
+
+        if (screenWidthDp != 0) {
+            config.setScreenWidthDp("w"+screenWidthDp+"dp");
+        }
+
+        if (screenHeightDp != 0) {
+            config.setScreenHeightDp("h"+screenHeightDp+"dp");
+        }
 
         is.skipToPos(start + size, "Skip config parsing");
         return config;
+    }
+
+    private String parseOrientasion(int orientation) {
+        if (orientation == 1) {
+            return "port";
+        } else if (orientation == 2) {
+            return "land";
+        } else {
+            return "o"+orientation;
+        }
+    }
+
+    private String parseScreenLayout(int screenLayout) {
+        switch (screenLayout) {
+            case 1:
+                return "small";
+            case 2:
+                return "normal";
+            case 3:
+                return "large";
+            case 4:
+                return "xlarge";
+            case 64:
+                return "ldltr";
+            case 128:
+                return "ldrtl";
+            default:
+                return "sl"+screenLayout;
+        }
     }
 
     private String parseDensity(int density) {

@@ -25,8 +25,8 @@ subprojects {
     version = jadxVersion
 
     tasks.withType(JavaCompile) {
-        sourceCompatibility = JavaVersion.VERSION_1_6
-        targetCompatibility = JavaVersion.VERSION_1_6
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
 
         if (!"$it".contains(':jadx-samples:')) {
             options.compilerArgs << '-Xlint' << '-Xlint:unchecked' << '-Xlint:deprecation'
@@ -108,5 +108,5 @@ build.dependsOn(dist, samples)
 clean.dependsOn(cleanBuildDir)
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '2.7'
+    gradleVersion = '2.14.1'
 }
