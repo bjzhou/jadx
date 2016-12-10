@@ -99,6 +99,10 @@ public class ResXmlGen {
     }
 
     private void addSimpleValue(CodeWriter cw, String typeName, String attrName, String attrValue, String valueStr) {
+        if (valueStr.startsWith("res/")) {
+            // remove duplicated resources.
+            return;
+        }
         cw.startLine();
         cw.add('<').add(typeName);
         if (attrName != null && attrValue != null) {
