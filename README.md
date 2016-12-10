@@ -14,7 +14,6 @@ Command line and GUI tools for produce Java source code from Android Dex and Apk
 
 
 ### TODO
-- parse nine patch png
 - do not deobf R.java
 - parse switch block better
 - parse anonymous inner class better
