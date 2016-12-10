@@ -15,7 +15,6 @@ import jadx.core.dex.info.ConstStorage;
 import jadx.core.dex.instructions.args.ArgType;
 import jadx.core.dex.nodes.FieldNode;
 import jadx.core.dex.nodes.RootNode;
-import jadx.core.utils.StringUtils;
 import jadx.core.utils.exceptions.JadxRuntimeException;
 import jadx.core.xmlgen.entry.ValuesParser;
 
@@ -195,7 +194,7 @@ public class BinaryXMLParser extends CommonBinaryParser {
 
         writer.startLine().addIndent();
         writer.attachSourceLine(lineNumber);
-        writer.add(StringUtils.escapeXML(str.trim())); // TODO: wrap into CDATA for easier reading
+        writer.add("<![CDATA["+str.trim()+"]]>");
 
         int size = is.readInt16();
         is.skip(size - 2);
