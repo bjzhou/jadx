@@ -260,7 +260,7 @@ public class ResTableParser extends CommonBinaryParser {
         }
 
         if (orientation != 0) {
-            config.setOrientation(parseOrientasion(orientation));
+            config.setOrientation(parseOrientation(orientation));
         }
 
         if (screenWidthDp != 0) {
@@ -275,7 +275,7 @@ public class ResTableParser extends CommonBinaryParser {
         return config;
     }
 
-    private String parseOrientasion(int orientation) {
+    private String parseOrientation(int orientation) {
         if (orientation == 1) {
             return "port";
         } else if (orientation == 2) {
