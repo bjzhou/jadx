@@ -119,6 +119,9 @@ public class StringUtils {
     }
 
     public static String escapeResStrValue(String str) {
+        if (str.contains("<") && str.contains(">")) {
+            return "<![CDATA[" + str + "]]>";
+        }
         int len = str.length();
         StringBuilder sb = new StringBuilder(len);
         for (int i = 0; i < len; i++) {
