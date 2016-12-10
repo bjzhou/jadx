@@ -219,27 +219,58 @@ public class ResTableParser extends CommonBinaryParser {
         int orientation = is.readInt8();
         int touchscreen = is.readInt8();
         int density = is.readInt16();
-		/*
-		is.readInt8(); // keyboard
-		is.readInt8(); // navigation
-		is.readInt8(); // inputFlags
-		is.readInt8(); // inputPad0
 
-		is.readInt16(); // screenWidth
-		is.readInt16(); // screenHeight
+        if (density != 0) {
+            config.setDensity(parseDensity(density));
+        }
 
-		is.readInt16(); // sdkVersion
-		is.readInt16(); // minorVersion
+        is.readInt8(); // keyboard
+        is.readInt8(); // navigation
+        is.readInt8(); // inputFlags
+        is.readInt8(); // inputPad0
 
-		is.readInt8(); // screenLayout
-		is.readInt8(); // uiMode
-		is.readInt16(); // smallestScreenWidthDp
+        int screenWidth = is.readInt16();
+        int screenHeight = is.readInt16();
 
-		is.readInt16(); // screenWidthDp
-		is.readInt16(); // screenHeightDp
-		*/
+        if (screenWidth != 0 && screenHeight != 0) {
+            config.setScreenSize(screenWidth+"x"+screenHeight);
+        }
+
+        int sdkVersion = is.readInt16();
+
+        if (sdkVersion != 0) {
+            config.setSdkVersion("v"+sdkVersion);
+        }
+
+        int minorVersion = is.readInt16();
+
+        is.readInt8(); // screenLayout
+        is.readInt8(); // uiMode
+        is.readInt16(); // smallestScreenWidthDp
+
+        is.readInt16(); // screenWidthDp
+        is.readInt16(); // screenHeightDp
+
         is.skipToPos(start + size, "Skip config parsing");
         return config;
+    }
+
+    private String parseDensity(int density) {
+        if (density == 120) {
+            return "ldpi";
+        } else if (density == 160) {
+            return "mdpi";
+        } else if (density == 240) {
+            return "hdpi";
+        } else if (density == 320) {
+            return "xhdpi";
+        } else if (density == 480) {
+            return "xxhdpi";
+        } else if (density == 640) {
+            return "xxxhdpi";
+        } else {
+            return density+"dpi";
+        }
     }
 
     private String parseLocale() throws IOException {
