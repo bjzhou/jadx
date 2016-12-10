@@ -83,25 +83,28 @@ public class Deobfuscator {
             }
         }
 
-        ArgType superClass = cls.getSuperClass();
-        if (superClass != null) {
-            ClassNode superNode = dex.resolveClass(superClass);
-            if (superNode != null) {
-                ClassNode clsWithMth = resolveOverridingInternal(dex, superNode, signature, overrideSet, rootClass);
-                if (clsWithMth != null) {
-                    if ((result != null) && (result != cls)) {
-                        if (clsWithMth != result) {
-                            LOG.warn(String.format("Multiple overriding '%s' from '%s' and '%s' in '%s'",
-                                    signature,
-                                    result.getFullName(), clsWithMth.getFullName(),
-                                    rootClass.getFullName()));
+        try {
+            ArgType superClass = cls.getSuperClass();
+            if (superClass != null) {
+                ClassNode superNode = dex.resolveClass(superClass);
+                if (superNode != null) {
+                    ClassNode clsWithMth = resolveOverridingInternal(dex, superNode, signature, overrideSet, rootClass);
+                    if (clsWithMth != null) {
+                        if ((result != null) && (result != cls)) {
+                            if (clsWithMth != result) {
+                                LOG.warn(String.format("Multiple overriding '%s' from '%s' and '%s' in '%s'",
+                                        signature,
+                                        result.getFullName(), clsWithMth.getFullName(),
+                                        rootClass.getFullName()));
+                            }
+                        } else {
+                            result = clsWithMth;
                         }
-                    } else {
-                        result = clsWithMth;
                     }
                 }
             }
-        }
+        } catch (Throwable e) {}
+
 
         for (ArgType iFaceType : cls.getInterfaces()) {
             ClassNode iFaceNode = dex.resolveClass(iFaceType);
