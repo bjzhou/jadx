@@ -120,6 +120,7 @@ public class StringUtils {
 
     public static String escapeResStrValue(String str) {
         if (str.contains("<") && str.contains(">")) {
+            str = str.replace("'", "\\'");
             return "<![CDATA[" + str + "]]>";
         }
         int len = str.length();
