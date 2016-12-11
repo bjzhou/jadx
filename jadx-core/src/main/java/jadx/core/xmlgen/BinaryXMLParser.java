@@ -38,7 +38,6 @@ public class BinaryXMLParser extends CommonBinaryParser {
     private final Map<Integer, FieldNode> localStyleMap = new HashMap<Integer, FieldNode>();
     private final Map<Integer, String> resNames;
     private final Map<String, String> nsMap = new HashMap<>();
-    private final ManifestAttributes attributes;
     private CodeWriter writer;
     private String[] strings;
     private String currentTag = "ERROR";
@@ -67,9 +66,6 @@ public class BinaryXMLParser extends CommonBinaryParser {
                 }
             }
             resNames = constStorage.getResourcesNames();
-
-            attributes = new ManifestAttributes();
-            attributes.parseAll();
         } catch (Exception e) {
             throw new JadxRuntimeException("BinaryXMLParser init error", e);
         }
@@ -266,7 +262,7 @@ public class BinaryXMLParser extends CommonBinaryParser {
             writer.add(nsMap.get(strings[attributeNS])).add(':');
         }
         writer.add(attrName).add("=\"");
-        String decodedAttr = attributes.decode(attrName, attrValData);
+        String decodedAttr = ManifestAttributes.getInstance().decode(attrName, attrValData);
         if (decodedAttr != null) {
             writer.add(decodedAttr);
         } else {
@@ -274,10 +270,10 @@ public class BinaryXMLParser extends CommonBinaryParser {
         }
         writer.add('"');
         if (attrName.equals("minSdkVersion")) {
-            ManifestAttributes.sMinSdkVersion = attrValData;
+            ManifestAttributes.getInstance().minSdkVersion = attrValData;
         }
         if (attrName.equals("targetSdkVersion")) {
-            ManifestAttributes.sTargetSdkVersion = attrValData;
+            ManifestAttributes.getInstance().targetSdkVersion = attrValData;
         }
     }
 
@@ -309,7 +305,14 @@ public class BinaryXMLParser extends CommonBinaryParser {
                         }
                         writer.add(resName);
                     } else {
-                        writer.add("0x").add(Integer.toHexString(attrValData));
+                        resName = ValuesParser.androidResMap.get(attrValData);
+                        if (resName != null) {
+                            writer.add("@android:").add(resName);
+                        } else if (attrValData == 0) {
+                            writer.add("@null");
+                        } else {
+                            writer.add("0x").add(Integer.toHexString(attrValData));
+                        }
                     }
                 }
             }
