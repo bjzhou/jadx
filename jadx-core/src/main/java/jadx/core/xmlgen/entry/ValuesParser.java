@@ -85,6 +85,7 @@ public class ValuesParser extends ParserConstants {
             case TYPE_REFERENCE: {
                 String ri = resMap.get(data);
                 if (ri == null) {
+                    if (data == 0) return "0";
                     return "?unknown_ref: " + Integer.toHexString(data);
                 }
                 return "@" + ri;
