@@ -37,11 +37,10 @@ public class BinaryXMLParser extends CommonBinaryParser {
     private final Map<Integer, String> styleMap = new HashMap<Integer, String>();
     private final Map<Integer, FieldNode> localStyleMap = new HashMap<Integer, FieldNode>();
     private final Map<Integer, String> resNames;
+    private final Map<String, String> nsMap = new HashMap<>();
     private final ManifestAttributes attributes;
     private CodeWriter writer;
     private String[] strings;
-    private String nsPrefix = "ERROR";
-    private String nsURI = "ERROR";
     private String currentTag = "ERROR";
     private boolean firstElement;
     private boolean wasOneLiner = false;
@@ -159,9 +158,8 @@ public class BinaryXMLParser extends CommonBinaryParser {
         int beginLineNumber = is.readInt32();
         int comment = is.readInt32();
         int beginPrefix = is.readInt32();
-        nsPrefix = strings[beginPrefix];
         int beginURI = is.readInt32();
-        nsURI = strings[beginURI];
+        nsMap.put(strings[beginURI], strings[beginPrefix]);
     }
 
     private void parseNameSpaceEnd() throws IOException {
@@ -174,9 +172,8 @@ public class BinaryXMLParser extends CommonBinaryParser {
         int endLineNumber = is.readInt32();
         int comment = is.readInt32();
         int endPrefix = is.readInt32();
-        nsPrefix = strings[endPrefix];
         int endURI = is.readInt32();
-        nsURI = strings[endURI];
+        nsMap.put(strings[endURI], strings[endPrefix]);
     }
 
     private void parseCData() throws IOException {
@@ -235,7 +232,9 @@ public class BinaryXMLParser extends CommonBinaryParser {
         int classIndex = is.readInt16();
         int styleIndex = is.readInt16();
         if ("manifest".equals(currentTag) || writer.getIndent() == 0) {
-            writer.add(" xmlns:android=\"").add(nsURI).add("\"");
+            for (Map.Entry<String, String> entry : nsMap.entrySet()) {
+                writer.add(" xmlns:" + entry.getValue() + "=\"").add(entry.getKey()).add("\"");
+            }
         }
         boolean attrNewLine = attributeCount == 1 ? false : ATTR_NEW_LINE;
         for (int i = 0; i < attributeCount; i++) {
@@ -264,7 +263,7 @@ public class BinaryXMLParser extends CommonBinaryParser {
             writer.add(' ');
         }
         if (attributeNS != -1) {
-            writer.add(nsPrefix).add(':');
+            writer.add(nsMap.get(strings[attributeNS])).add(':');
         }
         writer.add(attrName).add("=\"");
         String decodedAttr = attributes.decode(attrName, attrValData);
@@ -289,7 +288,7 @@ public class BinaryXMLParser extends CommonBinaryParser {
             if (name != null) {
                 writer.add("@*");
                 if (attributeNS != -1) {
-                    writer.add(nsPrefix).add(':');
+                    writer.add(nsMap.get(strings[attributeNS])).add(':');
                 }
                 writer.add("style/").add(name.replaceAll("_", "."));
             } else {
