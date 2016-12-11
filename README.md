@@ -14,7 +14,7 @@ Command line and GUI tools for produce Java source code from Android Dex and Apk
 
 
 ### TODO
-- do not deobf R.java
+- fix more res errors
 - parse switch block better
 - parse anonymous inner class better
 
