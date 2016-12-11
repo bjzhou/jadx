@@ -56,6 +56,8 @@ public class ResTableParser extends CommonBinaryParser {
         return resStorage;
     }
 
+    public String[] getStrings() { return strings; }
+
     void decodeTableChunk() throws IOException {
         is.checkInt16(RES_TABLE_TYPE, "Not a table chunk");
         is.checkInt16(0x000c, "Unexpected table header size");
