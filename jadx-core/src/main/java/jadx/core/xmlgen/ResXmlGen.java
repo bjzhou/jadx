@@ -136,17 +136,19 @@ public class ResXmlGen {
     private void addItem(CodeWriter cw, String itemTag, String typeName, RawNamedValue value) {
         String nameStr = vp.decodeNameRef(value.getNameRef());
         String valueStr = vp.decodeValue(value.getRawValue());
-        if (valueStr.equals("0")) {
-            valueStr = "@null";
-        }
-        if (nameStr != null) {
-            try {
-                int intVal = Integer.parseInt(valueStr);
-                String newVal = ManifestAttributes.getInstance().decode(nameStr.replace("android:attr.", ""), intVal);
-                if (newVal != null) {
-                    valueStr = newVal;
+        if (!typeName.equals("attr")) {
+            if (valueStr.equals("0")) {
+                valueStr = "@null";
+            }
+            if (nameStr != null) {
+                try {
+                    int intVal = Integer.parseInt(valueStr);
+                    String newVal = ManifestAttributes.getInstance().decode(nameStr.replace("android:attr.", ""), intVal);
+                    if (newVal != null) {
+                        valueStr = newVal;
+                    }
+                } catch (NumberFormatException ignored) {
                 }
-            } catch (NumberFormatException ignored) {
             }
         }
         if (typeName.equals("attr")) {
