@@ -70,7 +70,7 @@ public class ResXmlGen {
     private void addValue(CodeWriter cw, ResourceEntry ri) {
         if (ri.getSimpleValue() != null) {
             String valueStr = vp.decodeValue(ri.getSimpleValue());
-            addSimpleValue(cw, ri.getTypeName(), "name", ri.getKeyName(), valueStr);
+            addSimpleValue(cw, ri.getTypeName(), ri.getTypeName(), "name", ri.getKeyName(), valueStr);
         } else {
             cw.startLine();
             cw.add('<').add(ri.getTypeName()).add(' ');
@@ -134,36 +134,33 @@ public class ResXmlGen {
 
 
     private void addItem(CodeWriter cw, String itemTag, String typeName, RawNamedValue value) {
-        String keyName = null;
-        String keyValue = null;
-        int nameRef = value.getNameRef();
-        if (ParserConstants.isResInternalId(nameRef)) {
-            keyValue = ParserConstants.PLURALS_MAP.get(nameRef);
-            if (keyValue != null) {
-                keyName = "quantity";
-            }
-        }
-        String nameStr = vp.decodeNameRef(nameRef);
+        String nameStr = vp.decodeNameRef(value.getNameRef());
         String valueStr = vp.decodeValue(value.getRawValue());
         if (typeName.equals("attr")) {
             if (nameStr != null) {
-                addSimpleValue(cw, itemTag, nameStr, valueStr, "");
+                addSimpleValue(cw, typeName, itemTag, nameStr, valueStr, valueStr);
+            }
+        } else if (typeName.equals("style")) {
+            if (nameStr != null) {
+                addSimpleValue(cw, typeName, itemTag, nameStr, "", valueStr);
             }
         } else {
-            addSimpleValue(cw, itemTag, keyName, keyValue, valueStr);
+            addSimpleValue(cw, typeName, itemTag, nameStr, valueStr, valueStr);
         }
     }
 
-    private void addSimpleValue(CodeWriter cw, String typeName, String attrName, String attrValue, String valueStr) {
+    private void addSimpleValue(CodeWriter cw, String typeName, String itemTag,  String attrName, String attrValue, String valueStr) {
         if (valueStr.startsWith("res/")) {
             // remove duplicated resources.
             return;
         }
         cw.startLine();
-        cw.add('<').add(typeName);
+        cw.add('<').add(itemTag);
         if (attrName != null && attrValue != null) {
-            if (typeName.equals("enum") || typeName.equals("flag")) {
+            if (typeName.equals("attr")) {
                 cw.add(' ').add("name=\"").add(attrName.replace("id.", "")).add("\" value=\"").add(attrValue).add("\"");
+            } else if (typeName.equals("style")) {
+                cw.add(' ').add("name=\"").add(attrName).add("\"");
             } else {
                 cw.add(' ').add(attrName).add("=\"").add(attrValue).add('"');
             }
@@ -172,12 +169,12 @@ public class ResXmlGen {
             cw.add(" />");
         } else {
             cw.add('>');
-            if (typeName.equals("string")) {
+            if (itemTag.equals("string")) {
                 cw.add(StringUtils.escapeResStrValue(valueStr));
             } else {
                 cw.add(StringUtils.escapeResValue(valueStr));
             }
-            cw.add("</").add(typeName).add('>');
+            cw.add("</").add(itemTag).add('>');
         }
     }
 
