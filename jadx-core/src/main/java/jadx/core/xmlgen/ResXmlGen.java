@@ -138,14 +138,14 @@ public class ResXmlGen {
         String valueStr = vp.decodeValue(value.getRawValue());
         if (typeName.equals("attr")) {
             if (nameStr != null) {
-                addSimpleValue(cw, typeName, itemTag, nameStr, valueStr, valueStr);
+                addSimpleValue(cw, typeName, itemTag, nameStr, valueStr, "");
             }
         } else if (typeName.equals("style")) {
             if (nameStr != null) {
                 addSimpleValue(cw, typeName, itemTag, nameStr, "", valueStr);
             }
         } else {
-            addSimpleValue(cw, typeName, itemTag, nameStr, valueStr, valueStr);
+            addSimpleValue(cw, typeName, itemTag, null, null, valueStr);
         }
     }
 
@@ -160,7 +160,7 @@ public class ResXmlGen {
             if (typeName.equals("attr")) {
                 cw.add(' ').add("name=\"").add(attrName.replace("id.", "")).add("\" value=\"").add(attrValue).add("\"");
             } else if (typeName.equals("style")) {
-                cw.add(' ').add("name=\"").add(attrName).add("\"");
+                cw.add(' ').add("name=\"").add(attrName.replace("attr.", "")).add("\"");
             } else {
                 cw.add(' ').add(attrName).add("=\"").add(attrValue).add('"');
             }
