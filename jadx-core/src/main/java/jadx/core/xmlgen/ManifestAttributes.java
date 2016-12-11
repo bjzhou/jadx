@@ -29,13 +29,26 @@ public class ManifestAttributes {
     private static final String MANIFEST_ATTR_XML = "/android/attrs_manifest.xml";
     private final Map<String, MAttr> attrMap = new HashMap<String, MAttr>();
 
-    public static int sMinSdkVersion = 15;
-    public static int sTargetSdkVersion = 22;
+    public int minSdkVersion = 15;
+    public int targetSdkVersion = 22;
 
-    public ManifestAttributes() throws Exception {
+    private static ManifestAttributes instance;
+    public static ManifestAttributes getInstance() {
+         if (instance == null) {
+             try {
+                 instance = new ManifestAttributes();
+             } catch (Exception e) {
+                 e.printStackTrace();
+             }
+         }
+         return instance;
     }
 
-    public void parseAll() throws Exception {
+    private ManifestAttributes() throws Exception {
+        parseAll();
+    }
+
+    private void parseAll() throws Exception {
         parse(loadXML(ATTR_XML));
         parse(loadXML(MANIFEST_ATTR_XML));
         LOG.debug("Loaded android attributes count: {}", attrMap.size());

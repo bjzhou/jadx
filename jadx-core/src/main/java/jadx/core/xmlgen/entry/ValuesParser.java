@@ -20,8 +20,8 @@ public class ValuesParser extends ParserConstants {
     private final String[] strings;
     private final Map<Integer, String> resMap;
 
-    private static String[] androidStrings;
-    private static Map<Integer, String> androidResMap;
+    public static String[] androidStrings;
+    public static Map<Integer, String> androidResMap;
 
     public ValuesParser(String[] strings, Map<Integer, String> resMap) {
         this.strings = strings;

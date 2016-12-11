@@ -63,8 +63,8 @@ public class ExportGradleProject {
             appPackage = "UNKNOWN";
         }
         tmpl.add("applicationId", appPackage);
-        tmpl.add("minSdkVersion", ManifestAttributes.sMinSdkVersion);
-        tmpl.add("targetSdkVersion", ManifestAttributes.sTargetSdkVersion);
+        tmpl.add("minSdkVersion", ManifestAttributes.getInstance().minSdkVersion);
+        tmpl.add("targetSdkVersion", ManifestAttributes.getInstance().targetSdkVersion);
         tmpl.save(new File(outDir, "build.gradle"));
     }
 
