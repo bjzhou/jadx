@@ -42,8 +42,9 @@ public class BinaryXMLParser extends CommonBinaryParser {
     private String[] strings;
     private String currentTag = "ERROR";
     private boolean firstElement;
-    private boolean wasOneLiner = false;
     private ValuesParser valuesParser;
+    private boolean isLastEnd = true;
+    private boolean isOneLine = true;
 
     public BinaryXMLParser(RootNode root) {
         try {
@@ -155,7 +156,7 @@ public class BinaryXMLParser extends CommonBinaryParser {
         int comment = is.readInt32();
         int beginPrefix = is.readInt32();
         int beginURI = is.readInt32();
-        nsMap.put(strings[beginURI], strings[beginPrefix]);
+        nsMap.computeIfAbsent(strings[beginURI], k -> strings[beginPrefix]);
     }
 
     private void parseNameSpaceEnd() throws IOException {
@@ -169,7 +170,7 @@ public class BinaryXMLParser extends CommonBinaryParser {
         int comment = is.readInt32();
         int endPrefix = is.readInt32();
         int endURI = is.readInt32();
-        nsMap.put(strings[endURI], strings[endPrefix]);
+        nsMap.computeIfAbsent(strings[endURI], k -> strings[endPrefix]);
     }
 
     private void parseCData() throws IOException {
@@ -185,9 +186,11 @@ public class BinaryXMLParser extends CommonBinaryParser {
         int strIndex = is.readInt32();
         String str = strings[strIndex];
 
-        writer.startLine().addIndent();
+
+        //TODO: what's this for?
+        /*writer.startLine().addIndent();
         writer.attachSourceLine(lineNumber);
-        writer.add("<![CDATA["+str.trim()+"]]>");
+        writer.add(StringUtils.escapeXML(str.trim()));*/
 
         int size = is.readInt16();
         is.skip(size - 2);
@@ -208,10 +211,11 @@ public class BinaryXMLParser extends CommonBinaryParser {
         int comment = is.readInt32();
         int startNS = is.readInt32();
         int startNSName = is.readInt32(); // actually is elementName...
-        if (!wasOneLiner && !"ERROR".equals(currentTag)) {
+        if (!isLastEnd && !"ERROR".equals(currentTag)) {
             writer.add(">");
         }
-        wasOneLiner = false;
+        isOneLine = true;
+        isLastEnd = false;
         currentTag = strings[startNSName];
         writer.startLine("<").add(currentTag);
         writer.attachSourceLine(elementBegLineNumber);
@@ -282,10 +286,11 @@ public class BinaryXMLParser extends CommonBinaryParser {
             // reference custom processing
             String name = styleMap.get(attrValData);
             if (name != null) {
-                writer.add("@*");
+                writer.add("@");
                 if (attributeNS != -1) {
                     writer.add(nsMap.get(strings[attributeNS])).add(':');
                 }
+                LOG.warn("decodeAttribute: " + attributeNS + " " + name);
                 writer.add("style/").add(name.replaceAll("_", "."));
             } else {
                 FieldNode field = localStyleMap.get(attrValData);
@@ -333,9 +338,8 @@ public class BinaryXMLParser extends CommonBinaryParser {
         int comment = is.readInt32();
         int elementNS = is.readInt32();
         int elementName = is.readInt32();
-        if (currentTag.equals(strings[elementName])) {
+        if (currentTag.equals(strings[elementName]) && isOneLine && !isLastEnd) {
             writer.add(" />");
-            wasOneLiner = true;
         } else {
             writer.startLine("</");
             writer.attachSourceLine(endLineNumber);
@@ -344,6 +348,7 @@ public class BinaryXMLParser extends CommonBinaryParser {
             }
             writer.add(strings[elementName]).add(">");
         }
+        isLastEnd = true;
         if (writer.getIndent() != 0) {
             writer.decIndent();
         }
