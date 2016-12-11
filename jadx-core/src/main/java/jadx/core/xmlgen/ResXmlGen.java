@@ -74,17 +74,66 @@ public class ResXmlGen {
         } else {
             cw.startLine();
             cw.add('<').add(ri.getTypeName()).add(' ');
-            cw.add("name=\"").add(ri.getKeyName()).add("\">");
+            String itemTag = "item";
+            if (ri.getTypeName().equals("attr") && ri.getNamedValues().size() > 0) {
+                cw.add("name=\"").add(ri.getKeyName());
+                int type = ri.getNamedValues().get(0).getRawValue().getData();
+                if ((type & ValuesParser.ATTR_TYPE_ENUM) != 0) {
+                    itemTag = "enum";
+                } else if ((type & ValuesParser.ATTR_TYPE_FLAGS) != 0) {
+                    itemTag = "flag";
+                }
+                String formatValue = getTypeAsString(type);
+                if (formatValue != null) {
+                    cw.add("\" format=\"").add(formatValue);
+                }
+                cw.add("\">");
+            } else {
+                cw.add("name=\"").add(ri.getKeyName()).add("\">");
+            }
             cw.incIndent();
             for (RawNamedValue value : ri.getNamedValues()) {
-                addItem(cw, value);
+                addItem(cw, itemTag, ri.getTypeName(), value);
             }
             cw.decIndent();
             cw.startLine().add("</").add(ri.getTypeName()).add('>');
         }
     }
 
-    private void addItem(CodeWriter cw, RawNamedValue value) {
+    private String getTypeAsString(int type) {
+        String s = "";
+        if ((type & ValuesParser.ATTR_TYPE_REFERENCE) != 0) {
+            s += "|reference";
+        }
+        if ((type & ValuesParser.ATTR_TYPE_STRING) != 0) {
+            s += "|string";
+        }
+        if ((type & ValuesParser.ATTR_TYPE_INTEGER) != 0) {
+            s += "|integer";
+        }
+        if ((type & ValuesParser.ATTR_TYPE_BOOLEAN) != 0) {
+            s += "|boolean";
+        }
+        if ((type & ValuesParser.ATTR_TYPE_COLOR) != 0) {
+            s += "|color";
+        }
+        if ((type & ValuesParser.ATTR_TYPE_FLOAT) != 0) {
+            s += "|float";
+        }
+        if ((type & ValuesParser.ATTR_TYPE_DIMENSION) != 0) {
+            s += "|dimension";
+        }
+        if ((type & ValuesParser.ATTR_TYPE_FRACTION) != 0) {
+            s += "|fraction";
+        }
+        if (s.isEmpty()) {
+            return null;
+        }
+        return s.substring(1);
+    }
+
+
+    private void addItem(CodeWriter cw, String itemTag, String typeName, RawNamedValue value) {
         String keyName = null;
         String keyValue = null;
         int nameRef = value.getNameRef();
@@ -94,8 +143,15 @@ public class ResXmlGen {
                 keyName = "quantity";
             }
         }
+        String nameStr = vp.decodeNameRef(nameRef);
         String valueStr = vp.decodeValue(value.getRawValue());
-        addSimpleValue(cw, "item", keyName, keyValue, valueStr);
+        if (typeName.equals("attr")) {
+            if (nameStr != null) {
+                addSimpleValue(cw, itemTag, nameStr, valueStr, "");
+            }
+        } else {
+            addSimpleValue(cw, itemTag, keyName, keyValue, valueStr);
+        }
     }
 
     private void addSimpleValue(CodeWriter cw, String typeName, String attrName, String attrValue, String valueStr) {
@@ -106,15 +162,23 @@ public class ResXmlGen {
         cw.startLine();
         cw.add('<').add(typeName);
         if (attrName != null && attrValue != null) {
-            cw.add(' ').add(attrName).add("=\"").add(attrValue).add('"');
+            if (typeName.equals("enum") || typeName.equals("flag")) {
+                cw.add(' ').add("name=\"").add(attrName.replace("id.", "")).add("\" value=\"").add(attrValue).add("\"");
+            } else {
+                cw.add(' ').add(attrName).add("=\"").add(attrValue).add('"');
+            }
         }
-        cw.add('>');
-        if (typeName.equals("string")) {
-            cw.add(StringUtils.escapeResStrValue(valueStr));
+        if (valueStr.equals("")) {
+            cw.add(" />");
         } else {
-            cw.add(StringUtils.escapeResValue(valueStr));
+            cw.add('>');
+            if (typeName.equals("string")) {
+                cw.add(StringUtils.escapeResStrValue(valueStr));
+            } else {
+                cw.add(StringUtils.escapeResValue(valueStr));
+            }
+            cw.add("</").add(typeName).add('>');
         }
-        cw.add("</").add(typeName).add('>');
     }
 
     private String getFileName(ResourceEntry ri) {
