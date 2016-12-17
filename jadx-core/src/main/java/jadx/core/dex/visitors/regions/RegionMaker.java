@@ -5,8 +5,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.BitSet;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -746,11 +744,7 @@ public class RegionMaker {
         for (int i = 0; i < len; i++) {
             Object key = insn.getKeys()[i];
             int targ = insn.getTargets()[i];
-            List<Object> keys = casesMap.get(targ);
-            if (keys == null) {
-                keys = new ArrayList<Object>(2);
-                casesMap.put(targ, keys);
-            }
+            List<Object> keys = casesMap.computeIfAbsent(targ, k -> new ArrayList<>(2));
             keys.add(key);
         }
 
@@ -808,10 +802,10 @@ public class RegionMaker {
             if (isBadCasesOrder(blocksMap, fallThroughCases)) {
                 LOG.debug("Fixing incorrect switch cases order, method: {}", mth);
                 blocksMap = reOrderSwitchCases(blocksMap, fallThroughCases);
-                if (isBadCasesOrder(blocksMap, fallThroughCases)) {
+                /*if (isBadCasesOrder(blocksMap, fallThroughCases)) {
                     LOG.error("Can't fix incorrect switch cases order, method: {}", mth);
                     mth.add(AFlag.INCONSISTENT_CODE);
-                }
+                }*/
             }
         }
 
@@ -912,19 +906,16 @@ public class RegionMaker {
                                                             final Map<BlockNode, BlockNode> fallThroughCases) {
         List<BlockNode> list = new ArrayList<BlockNode>(blocksMap.size());
         list.addAll(blocksMap.keySet());
-        Collections.sort(list, new Comparator<BlockNode>() {
-            @Override
-            public int compare(BlockNode a, BlockNode b) {
-                BlockNode nextA = fallThroughCases.get(a);
-                if (nextA != null) {
-                    if (b.equals(nextA)) {
-                        return -1;
-                    }
-                } else if (a.equals(fallThroughCases.get(b))) {
-                    return 1;
+        list.sort((a, b) -> {
+            BlockNode nextA = fallThroughCases.get(a);
+            if (nextA != null) {
+                if (b.equals(nextA)) {
+                    return -1;
                 }
-                return 0;
+            } else if (a.equals(fallThroughCases.get(b))) {
+                return 1;
             }
+            return 0;
         });
 
         Map<BlockNode, List<Object>> newBlocksMap = new LinkedHashMap<BlockNode, List<Object>>(blocksMap.size());

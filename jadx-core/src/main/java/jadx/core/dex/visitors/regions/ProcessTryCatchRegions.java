@@ -27,7 +27,6 @@ import jadx.core.dex.trycatch.TryCatchBlock;
 import jadx.core.utils.BlockUtils;
 import jadx.core.utils.ErrorsCounter;
 import jadx.core.utils.RegionUtils;
-import jadx.core.utils.exceptions.JadxRuntimeException;
 
 /**
  * Extract blocks to separate try/catch region
@@ -80,11 +79,13 @@ public class ProcessTryCatchRegions extends AbstractRegionVisitor {
             }
             List<BlockNode> domBlocks = BlockUtils.bitSetToBlocks(mth, bs);
             BlockNode domBlock;
-            if (domBlocks.size() != 1) {
+            if (domBlocks.size() == 0) {
+                continue;
+            } else if (domBlocks.size() != 1) {
                 domBlock = BlockUtils.getTopBlock(domBlocks);
                 if (domBlock == null) {
-                    throw new JadxRuntimeException(
-                            "Exception block dominator not found, method:" + mth + ". bs: " + domBlocks);
+                    LOG.warn("Exception block dominator not found, method:" + mth + ". bs: " + domBlocks);
+                    continue;
                 }
             } else {
                 domBlock = domBlocks.get(0);

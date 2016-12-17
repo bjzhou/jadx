@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import jadx.api.IJadxArgs;
 import jadx.core.dex.attributes.AType;
@@ -351,6 +353,7 @@ if(aliasToUse == null) {
 
     private String makeClsAlias(ClassNode cls) {
         ClassInfo classInfo = cls.getClassInfo();
+        ArgType superType = cls.getSuperClass();
         String alias = null;
 
         if (this.useSourceNameAsAlias) {
@@ -358,8 +361,29 @@ if(aliasToUse == null) {
         }
 
         if (alias == null) {
+            String superName = "";
             String clsName = classInfo.getShortName();
-            alias = String.format("C%04d%s", clsIndex++, makeName(clsName));
+            if (superType != null) {
+                ClassNode superNode = cls.dex().resolveClass(superType);
+                if (superNode != null) {
+                    if (shouldRename(superNode.getShortName())) {
+                        superName = getClsAlias(superNode);
+                    } else {
+                        superName = superNode.getShortName();
+                    }
+                } else {
+                    ClassInfo superInfo = ClassInfo.fromType(cls.dex(), superType);
+                    superName = getNameWithoutPackage(superInfo);
+                }
+                if (superName.equals("Object")) {
+                    superName = "";
+                } else {
+                    Pattern p = Pattern.compile("C[0-9]+\\w");
+                    Matcher m = p.matcher(superName);
+                    superName = m.replaceAll("");
+                }
+            }
+            alias = String.format("C%d%s%s", clsIndex++, makeName(clsName), makeName(superName));
         }
         PackageNode pkg = getPackageNode(classInfo.getPackage(), true);
         clsMap.put(classInfo, new DeobfClsInfo(this, cls, pkg, alias));
@@ -427,7 +451,29 @@ if(aliasToUse == null) {
     }
 
     public String makeFieldAlias(FieldNode field) {
-        String alias = String.format("f%d%s", fldIndex++, makeName(field.getName()));
+        ArgType type = field.getType();
+        String typeName = "";
+        if (type != null && (type.isObject() || type.isGeneric())) {
+            ClassNode superNode = field.getParentClass().dex().resolveClass(type);
+            if (superNode != null) {
+                if (shouldRename(superNode.getShortName())) {
+                    typeName = getClsAlias(superNode);
+                } else {
+                    typeName = superNode.getShortName();
+                }
+            } else {
+                ClassInfo superInfo = ClassInfo.fromType(field.getParentClass().dex(), type);
+                typeName = getNameWithoutPackage(superInfo);
+            }
+            if (typeName.equals("Object")) {
+                typeName = "";
+            } else {
+                Pattern p = Pattern.compile("C[0-9]+\\w");
+                Matcher m = p.matcher(typeName);
+                typeName = m.replaceAll("");
+            }
+        }
+        String alias = String.format("f%d%s%s", fldIndex++, makeName(field.getName()), makeName(typeName));
         fldMap.put(field.getFieldInfo(), alias);
         return alias;
     }
@@ -455,7 +501,7 @@ if(aliasToUse == null) {
 
         final String pkgName = pkg.getName();
         if (!pkg.hasAlias() && shouldRename(pkgName)) {
-            final String pkgAlias = String.format("p%03d%s", pkgIndex++, makeName(pkgName));
+            final String pkgAlias = String.format("p%d%s", pkgIndex++, makeName(pkgName));
             pkg.setAlias(pkgAlias);
         }
     }

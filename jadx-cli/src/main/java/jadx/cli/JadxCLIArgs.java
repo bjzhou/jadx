@@ -37,9 +37,9 @@ public class JadxCLIArgs implements IJadxArgs {
     @Parameter(names = {"-s", "--no-src"}, description = "do not decompile source code")
     protected boolean skipSources = false;
     @Parameter(names = {"-e", "--export-gradle"}, description = "save as android gradle project")
-    protected boolean exportAsGradleProject = false;
+    protected boolean exportAsGradleProject = true;
     @Parameter(names = {"--show-bad-code"}, description = "show inconsistent code (incorrectly decompiled)")
-    protected boolean showInconsistentCode = false;
+    protected boolean showInconsistentCode = true;
     @Parameter(names = "--no-replace-consts", converter = InvertedBooleanConverter.class,
             description = "don't replace constant value with matching constant field")
     protected boolean replaceConsts = true;

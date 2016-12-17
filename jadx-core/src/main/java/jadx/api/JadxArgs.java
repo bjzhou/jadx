@@ -12,7 +12,7 @@ public class JadxArgs implements IJadxArgs {
 
     private boolean isVerbose = false;
     private boolean fallbackMode = false;
-    private boolean showInconsistentCode = false;
+    private boolean showInconsistentCode = true;
 
     private boolean isSkipResources = false;
     private boolean isSkipSources = false;
