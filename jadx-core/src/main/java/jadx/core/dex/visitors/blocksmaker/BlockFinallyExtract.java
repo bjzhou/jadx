@@ -471,7 +471,7 @@ public class BlockFinallyExtract extends AbstractVisitor {
             // already processed
             return true;
         }
-        if (remBlock.getPredecessors().size() != 1) {
+        if (remBlock.getPredecessors().size() <= 0) {
             LOG.warn("Finally extract failed: remBlock pred: {}, {}, method: {}", remBlock, remBlock.getPredecessors(), mth);
             return false;
         }
@@ -514,46 +514,48 @@ public class BlockFinallyExtract extends AbstractVisitor {
             }
         }
 
-        BlocksPair out = removeInfo.getOuts().iterator().next();
-        BlockNode rOut = out.getFirst();
-        BlockNode sOut = out.getSecond();
+        if (removeInfo.getOuts().iterator().hasNext()) {
+            BlocksPair out = removeInfo.getOuts().iterator().next();
+            BlockNode rOut = out.getFirst();
+            BlockNode sOut = out.getSecond();
 
-        // redirect out edges
-        List<BlockNode> filtPreds = BlockUtils.filterPredecessors(sOut);
-        if (filtPreds.size() > 1) {
-            BlockNode pred = sOut.getPredecessors().get(0);
-            BlockNode newPred = BlockSplitter.insertBlockBetween(mth, pred, sOut);
-            for (BlockNode predBlock : new ArrayList<BlockNode>(sOut.getPredecessors())) {
-                if (predBlock != newPred) {
-                    removeConnection(predBlock, sOut);
-                    connect(predBlock, newPred);
+            // redirect out edges
+            List<BlockNode> filtPreds = BlockUtils.filterPredecessors(sOut);
+            if (filtPreds.size() > 1) {
+                BlockNode pred = sOut.getPredecessors().get(0);
+                BlockNode newPred = BlockSplitter.insertBlockBetween(mth, pred, sOut);
+                for (BlockNode predBlock : new ArrayList<BlockNode>(sOut.getPredecessors())) {
+                    if (predBlock != newPred) {
+                        removeConnection(predBlock, sOut);
+                        connect(predBlock, newPred);
+                    }
                 }
+                rOut.getPredecessors().clear();
+                addIgnoredEdge(newPred, rOut);
+                connect(newPred, rOut);
+            } else if (filtPreds.size() == 1) {
+                BlockNode pred = filtPreds.get(0);
+                BlockNode repl = removeInfo.getBySecond(pred);
+                if (repl == null) {
+                    LOG.error("Block not found by {}, in {}, method: {}", pred, removeInfo, mth);
+                    return false;
+                }
+                removeConnection(pred, rOut);
+                addIgnoredEdge(repl, rOut);
+                connect(repl, rOut);
+            } else {
+                throw new JadxRuntimeException("Finally extract failed, unexpected preds: " + filtPreds
+                        + " for " + sOut + ", method: " + mth);
             }
-            rOut.getPredecessors().clear();
-            addIgnoredEdge(newPred, rOut);
-            connect(newPred, rOut);
-        } else if (filtPreds.size() == 1) {
-            BlockNode pred = filtPreds.get(0);
-            BlockNode repl = removeInfo.getBySecond(pred);
-            if (repl == null) {
-                LOG.error("Block not found by {}, in {}, method: {}", pred, removeInfo, mth);
-                return false;
-            }
-            removeConnection(pred, rOut);
-            addIgnoredEdge(repl, rOut);
-            connect(repl, rOut);
-        } else {
-            throw new JadxRuntimeException("Finally extract failed, unexpected preds: " + filtPreds
-                    + " for " + sOut + ", method: " + mth);
-        }
 
-        // redirect input edges
-        for (BlockNode pred : new ArrayList<BlockNode>(remBlock.getPredecessors())) {
-            BlockNode middle = insertBlockBetween(mth, pred, remBlock);
-            removeConnection(middle, remBlock);
-            connect(middle, startBlock);
-            addIgnoredEdge(middle, startBlock);
-            connect(middle, rOut);
+            // redirect input edges
+            for (BlockNode pred : new ArrayList<BlockNode>(remBlock.getPredecessors())) {
+                BlockNode middle = insertBlockBetween(mth, pred, remBlock);
+                removeConnection(middle, remBlock);
+                connect(middle, startBlock);
+                addIgnoredEdge(middle, startBlock);
+                connect(middle, rOut);
+            }
         }
 
         // mark blocks for remove

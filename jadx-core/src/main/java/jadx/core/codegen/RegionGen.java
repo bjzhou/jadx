@@ -281,7 +281,7 @@ public class RegionGen extends InsnGen {
             ExceptionHandler handler = entry.getKey();
             if (handler.isCatchAll()) {
                 if (allHandler != null) {
-                    LOG.warn("Several 'all' handlers in try/catch block in {}", mth);
+                    LOG.debug("Several 'all' handlers in try/catch block in {}", mth);
                 }
                 allHandler = handler;
             } else {
