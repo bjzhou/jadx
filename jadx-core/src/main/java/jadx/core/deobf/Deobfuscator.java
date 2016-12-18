@@ -14,8 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import jadx.api.IJadxArgs;
 import jadx.core.dex.attributes.AType;
@@ -360,27 +358,34 @@ public class Deobfuscator {
         }
 
         if (alias == null) {
-            String superName = "";
             String clsName = classInfo.getShortName();
-            if (superType != null) {
+            String superName = "";
+            int index = 0;
+            while (true) {
+                if (superType == null) break;
+                ClassInfo superInfo = ClassInfo.fromName(cls.dex(), superType.getObject());
+                String tempName = getNameWithoutPackage(superInfo);
+                if (!shouldRename(tempName)) {
+                    superName = tempName;
+                }
                 ClassNode superNode = cls.dex().resolveClass(superType);
                 if (superNode != null) {
-                    if (shouldRename(superNode.getShortName())) {
-                        superName = getClsAlias(superNode);
-                    } else {
-                        superName = superNode.getShortName();
+                    ArgType tempType = superNode.getSuperClass();
+                    if (superType.equals(tempType)) {
+                        LOG.warn("maybe wrong super class: " + superInfo.getFullName());
+                        break;
                     }
+                    superType = tempType;
+                    index++;
                 } else {
-                    ClassInfo superInfo = ClassInfo.fromType(cls.dex(), superType);
-                    superName = getNameWithoutPackage(superInfo);
+                    break;
                 }
-                if (superName.equals("Object")) {
-                    superName = "";
-                } else {
-                    Pattern p = Pattern.compile("C[0-9]+\\w");
-                    Matcher m = p.matcher(superName);
-                    superName = m.replaceAll("");
+                if (index > 1000) {
+                    break;
                 }
+            }
+            if (superName.equals("Object")) {
+                superName = "";
             }
             alias = String.format("C%d%s%s", clsIndex++, makeName(clsName), makeName(superName));
         }
@@ -449,36 +454,54 @@ public class Deobfuscator {
         return null;
     }
 
-    public String makeFieldAlias(FieldNode field) {
-        ArgType type = field.getType();
-        String typeName = "";
-        if (type != null && (type.isObject() || type.isGeneric())) {
-            ClassNode superNode = field.getParentClass().dex().resolveClass(type);
-            if (superNode != null) {
-                if (shouldRename(superNode.getShortName())) {
-                    typeName = getClsAlias(superNode);
-                } else {
-                    typeName = superNode.getShortName();
-                }
+    private String argType2ShortName(DexNode dexNode, ArgType type) {
+        String typeName;
+        if (type.isObject() || type.isGeneric()) {
+            ClassNode node = dexNode.resolveClass(type);
+            if (node != null) {
+                typeName = node.getAlias().getShortName();
             } else {
-                ClassInfo superInfo = ClassInfo.fromType(field.getParentClass().dex(), type);
+                ClassInfo superInfo = ClassInfo.fromName(dexNode, type.getObject());
                 typeName = getNameWithoutPackage(superInfo);
             }
-            if (typeName.equals("Object")) {
-                typeName = "";
-            } else {
-                Pattern p = Pattern.compile("C[0-9]+\\w");
-                Matcher m = p.matcher(typeName);
-                typeName = m.replaceAll("");
-            }
+        } else {
+            String primitive = type.getPrimitiveType().getLongName();
+            typeName = primitive.substring(0, 1).toUpperCase() + primitive.substring(1).toLowerCase();
         }
-        String alias = String.format("f%d%s%s", fldIndex++, makeName(field.getName()), makeName(typeName));
+        return typeName;
+    }
+
+    public String makeFieldAlias(FieldNode field) {
+        ArgType type = field.getType();
+        String alias = String.format("f%s%s", makeName(field.getName()), makeName(argType2ShortName(field.getParentClass().dex(), type)));
         fldMap.put(field.getFieldInfo(), alias);
         return alias;
     }
 
     public String makeMethodAlias(MethodNode mth) {
-        String alias = String.format("m%d%s", mthIndex++, makeName(mth.getName()));
+        String methodName;
+        String args = "";
+        for (ArgType type : mth.getMethodInfo().getArgumentsTypes()) {
+            args += argType2ShortName(mth.getParentClass().dex(), type);
+        }
+        if (mth.getMethodInfo().getReturnType() == null || mth.getMethodInfo().getReturnType().equals(ArgType.VOID)) {
+            if (args.isEmpty()) {
+                methodName = "Do";
+            } else {
+                methodName = "Set" + args;
+            }
+        } else if (mth.getMethodInfo().getReturnType().equals(ArgType.BOOLEAN)) {
+            methodName = "IsTrue";
+            if (!args.isEmpty()) {
+                methodName += "With" + args;
+            }
+        } else {
+            methodName = "Get" + argType2ShortName(mth.getParentClass().dex(), mth.getMethodInfo().getReturnType());
+            if (!args.isEmpty()) {
+                methodName += "With" + args;
+            }
+        }
+        String alias = String.format("m%s%s", makeName(mth.getName()), makeName(methodName));
         mthMap.put(mth.getMethodInfo(), alias);
         return alias;
     }
