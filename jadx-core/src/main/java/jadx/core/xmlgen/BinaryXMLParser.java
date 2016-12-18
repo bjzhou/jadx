@@ -290,7 +290,7 @@ public class BinaryXMLParser extends CommonBinaryParser {
                 if (attributeNS != -1) {
                     writer.add(nsMap.get(strings[attributeNS])).add(':');
                 }
-                LOG.warn("decodeAttribute: " + attributeNS + " " + name);
+                LOG.debug("decodeAttribute: " + attributeNS + " " + name);
                 writer.add("style/").add(name.replaceAll("_", "."));
             } else {
                 FieldNode field = localStyleMap.get(attrValData);
