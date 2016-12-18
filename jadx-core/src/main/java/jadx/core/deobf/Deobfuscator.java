@@ -37,16 +37,16 @@ public class Deobfuscator {
     private final List<DexNode> dexNodes;
     private final DeobfPresets deobfPresets;
 
-    private final Map<ClassInfo, DeobfClsInfo> clsMap = new HashMap<ClassInfo, DeobfClsInfo>();
-    private final Map<FieldInfo, String> fldMap = new HashMap<FieldInfo, String>();
-    private final Map<MethodInfo, String> mthMap = new HashMap<MethodInfo, String>();
-    private final Map<String, Integer> aliasMap = new HashMap<String, Integer>();
+    private final Map<ClassInfo, DeobfClsInfo> clsMap = new HashMap<>();
+    private final Map<FieldInfo, String> fldMap = new HashMap<>();
+    private final Map<MethodInfo, String> mthMap = new HashMap<>();
+    private final Map<String, Integer> aliasMap = new HashMap<>();
 
-    private final Map<MethodInfo, OverridedMethodsNode> ovrdMap = new HashMap<MethodInfo, OverridedMethodsNode>();
-    private final List<OverridedMethodsNode> ovrd = new ArrayList<OverridedMethodsNode>();
+    private final Map<MethodInfo, OverridedMethodsNode> ovrdMap = new HashMap<>();
+    private final List<OverridedMethodsNode> ovrd = new ArrayList<>();
 
     private final PackageNode rootPackage = new PackageNode("");
-    private final Set<String> pkgSet = new TreeSet<String>();
+    private final Set<String> pkgSet = new TreeSet<>();
 
     private final int maxLength;
     private final int minLength;
@@ -54,8 +54,6 @@ public class Deobfuscator {
 
     private int pkgIndex = 0;
     private int clsIndex = 0;
-    private int fldIndex = 0;
-    private int mthIndex = 0;
 
     public Deobfuscator(IJadxArgs args, @NotNull List<DexNode> dexNodes, File deobfMapFile) {
         this.args = args;
@@ -83,28 +81,20 @@ public class Deobfuscator {
             }
         }
 
-        try {
-            ArgType superClass = cls.getSuperClass();
-            if (superClass != null) {
-                ClassNode superNode = dex.resolveClass(superClass);
-                if (superNode != null) {
+        ArgType superClass = cls.getSuperClass();
+        if (superClass != null) {
+            ClassNode superNode = dex.resolveClass(superClass);
+            if (superNode != null) {
+                if (superNode.equals(cls)) {
+                    LOG.warn("maybe wrong super class Overriding: " + superNode.getFullName());
+                } else {
                     ClassNode clsWithMth = resolveOverridingInternal(dex, superNode, signature, overrideSet, rootClass);
                     if (clsWithMth != null) {
-                        if ((result != null) && (result != cls)) {
-                            if (clsWithMth != result) {
-                                LOG.warn(String.format("Multiple overriding '%s' from '%s' and '%s' in '%s'",
-                                        signature,
-                                        result.getFullName(), clsWithMth.getFullName(),
-                                        rootClass.getFullName()));
-                            }
-                        } else {
-                            result = clsWithMth;
-                        }
+                        result = clsWithMth;
                     }
                 }
             }
-        } catch (Throwable e) {}
-
+        }
 
         for (ArgType iFaceType : cls.getInterfaces()) {
             ClassNode iFaceNode = dex.resolveClass(iFaceType);
@@ -141,8 +131,6 @@ public class Deobfuscator {
     private void initIndexes() {
         pkgIndex = pkgSet.size();
         clsIndex = deobfPresets.getClsPresetMap().size();
-        fldIndex = deobfPresets.getFldPresetMap().size();
-        mthIndex = deobfPresets.getMthPresetMap().size();
     }
 
     private void preProcess() {
@@ -229,7 +217,6 @@ public class Deobfuscator {
             }
         } else {
             overrideSet.clear();
-            overrideSet = null;
         }
     }
 
