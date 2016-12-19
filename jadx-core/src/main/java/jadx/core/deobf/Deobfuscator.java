@@ -312,7 +312,7 @@ if(aliasToUse == null) {
 
         String alias = deobfPresets.getForCls(classInfo);
         if (alias != null) {
-            clsMap.put(classInfo, new DeobfClsInfo(this, cls, pkg, alias));
+            putClsMap(cls, pkg, alias, classInfo);
             return;
         }
         if (clsMap.containsKey(classInfo)) {
@@ -323,9 +323,22 @@ if(aliasToUse == null) {
         } else {
             if (this.useSourceNameAsAlias) {
                 alias = getAliasFromSourceFile(cls);
-                clsMap.put(classInfo, new DeobfClsInfo(this, cls, pkg, alias));
+                putClsMap(cls, pkg, alias, classInfo);
             }
         }
+    }
+
+    private void putClsMap(ClassNode cls, PackageNode pkg, String alias, ClassInfo classInfo) {
+        DeobfClsInfo deobfClsInfo = new DeobfClsInfo(this, cls, pkg, alias);
+        Integer integer = aliasMap.get(deobfClsInfo.getFullName());
+        if (integer != null) {
+            integer++;
+            aliasMap.put(deobfClsInfo.getFullName(), integer);
+            deobfClsInfo = new DeobfClsInfo(this, cls, pkg, alias + INNER_CLASS_SEPARATOR + integer);
+        } else {
+            aliasMap.put(deobfClsInfo.getFullName(), 0);
+        }
+        clsMap.put(classInfo, deobfClsInfo);
     }
 
     public String getClsAlias(ClassNode cls) {
@@ -378,7 +391,7 @@ if(aliasToUse == null) {
             alias = String.format("C%d%s%s", clsIndex++, makeName(clsName), makeName(superName));
         }
         PackageNode pkg = getPackageNode(classInfo.getPackage(), true);
-        clsMap.put(classInfo, new DeobfClsInfo(this, cls, pkg, alias));
+        putClsMap(cls, pkg, alias, classInfo);
         return alias;
     }
 
@@ -392,10 +405,6 @@ if(aliasToUse == null) {
         if (name.endsWith(".java")) {
             name = name.substring(0, name.length() - ".java".length());
         }
-        Integer integer = aliasMap.get(name);
-        integer = integer == null ? 0 : ++integer;
-        aliasMap.put(name, integer);
-        name = name + "$" + integer;
         if (NameMapper.isValidIdentifier(name)
                 && !NameMapper.isReserved(name)) {
             // TODO: check if no class with this name exists or already renamed
