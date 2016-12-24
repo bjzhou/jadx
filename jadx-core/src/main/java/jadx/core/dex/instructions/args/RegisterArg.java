@@ -36,6 +36,9 @@ public class RegisterArg extends InsnArg implements Named {
     }
 
     public SSAVar getSVar() {
+        if (sVar == null) {
+            sVar = new SSAVar(0, 0, new RegisterArg(0));
+        }
         return sVar;
     }
 
@@ -82,7 +85,10 @@ public class RegisterArg extends InsnArg implements Named {
 
     public RegisterArg duplicate(int regNum, SSAVar sVar) {
         RegisterArg dup = new RegisterArg(regNum, getType());
-        if (sVar != null) {
+        if (sVar == null) {
+            SSAVar ssVar = new SSAVar(0, 0, new RegisterArg(0));
+            dup.setSVar(ssVar);
+        } else {
             dup.setSVar(sVar);
         }
         dup.copyAttributesFrom(this);

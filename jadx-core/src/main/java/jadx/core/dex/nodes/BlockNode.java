@@ -22,7 +22,7 @@ public class BlockNode extends AttrNode implements IBlock {
     private int id;
     private List<BlockNode> predecessors = new ArrayList<BlockNode>(1);
     private List<BlockNode> successors = new ArrayList<BlockNode>(1);
-    private List<BlockNode> cleanSuccessors;
+    private List<BlockNode> cleanSuccessors = new ArrayList<>();
 
     // all dominators
     private BitSet doms = EmptyBitSet.EMPTY;

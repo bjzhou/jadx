@@ -455,6 +455,7 @@ public class ClassGen {
             insnGen.makeInsn(insn, code, InsnGen.Flags.BODY_ONLY_NOWRAP);
         } catch (Exception e) {
             ErrorsCounter.classError(cls, "Failed to generate init code", e);
+            e.printStackTrace();
         }
     }
 

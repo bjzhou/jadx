@@ -1,5 +1,8 @@
 package jadx.core.utils;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -16,9 +19,9 @@ import jadx.core.dex.nodes.InsnNode;
 import jadx.core.dex.trycatch.CatchAttr;
 import jadx.core.dex.trycatch.ExceptionHandler;
 import jadx.core.dex.trycatch.TryCatchBlock;
-import jadx.core.utils.exceptions.JadxRuntimeException;
 
 public class RegionUtils {
+    private static final Logger LOG = LoggerFactory.getLogger(RegionUtils.class);
 
     private RegionUtils() {
     }
@@ -46,7 +49,8 @@ public class RegionUtils {
             List<IContainer> blocks = region.getSubBlocks();
             return !blocks.isEmpty() && hasExitEdge(blocks.get(blocks.size() - 1));
         } else {
-            throw new JadxRuntimeException(unknownContainerType(container));
+            LOG.warn(unknownContainerType(container));
+            return false;
         }
     }
 
@@ -68,7 +72,8 @@ public class RegionUtils {
             }
             return getLastInsn(blocks.get(blocks.size() - 1));
         } else {
-            throw new JadxRuntimeException(unknownContainerType(container));
+            LOG.warn(unknownContainerType(container));
+            return null;
         }
     }
 
@@ -84,7 +89,8 @@ public class RegionUtils {
             }
             return getLastBlock(blocks.get(blocks.size() - 1));
         } else {
-            throw new JadxRuntimeException(unknownContainerType(container));
+            LOG.warn(unknownContainerType(container));
+            return null;
         }
     }
 
@@ -101,7 +107,8 @@ public class RegionUtils {
             return !blocks.isEmpty()
                     && hasExitBlock(blocks.get(blocks.size() - 1));
         } else {
-            throw new JadxRuntimeException(unknownContainerType(container));
+            LOG.warn(unknownContainerType(container));
+            return false;
         }
     }
 
@@ -113,7 +120,8 @@ public class RegionUtils {
             return !blocks.isEmpty()
                     && hasBreakInsn(blocks.get(blocks.size() - 1));
         } else {
-            throw new JadxRuntimeException("Unknown container type: " + container);
+            LOG.warn("Unknown container type: " + container);
+            return false;
         }
     }
 
@@ -128,7 +136,8 @@ public class RegionUtils {
             }
             return count;
         } else {
-            throw new JadxRuntimeException(unknownContainerType(container));
+            LOG.warn(unknownContainerType(container));
+            return 0;
         }
     }
 
@@ -148,7 +157,8 @@ public class RegionUtils {
             }
             return false;
         } else {
-            throw new JadxRuntimeException(unknownContainerType(container));
+            LOG.warn(unknownContainerType(container));
+            return false;
         }
     }
 
@@ -161,7 +171,7 @@ public class RegionUtils {
                 getAllRegionBlocks(block, blocks);
             }
         } else {
-            throw new JadxRuntimeException(unknownContainerType(container));
+            LOG.warn(unknownContainerType(container));
         }
     }
 
@@ -177,7 +187,8 @@ public class RegionUtils {
             }
             return false;
         } else {
-            throw new JadxRuntimeException(unknownContainerType(container));
+            LOG.warn(unknownContainerType(container));
+            return false;
         }
     }
 
@@ -261,29 +272,8 @@ public class RegionUtils {
             }
             return null;
         } else {
-            throw new JadxRuntimeException(unknownContainerType(container));
-        }
-    }
-
-    public static boolean isDominatedBy(BlockNode dom, IContainer cont) {
-        if (dom == cont) {
-            return true;
-        }
-        if (cont instanceof BlockNode) {
-            BlockNode block = (BlockNode) cont;
-            return block.isDominator(dom);
-        } else if (cont instanceof IBlock) {
-            return false;
-        } else if (cont instanceof IRegion) {
-            IRegion region = (IRegion) cont;
-            for (IContainer c : region.getSubBlocks()) {
-                if (!isDominatedBy(dom, c)) {
-                    return false;
-                }
-            }
-            return true;
-        } else {
-            throw new JadxRuntimeException(unknownContainerType(cont));
+            LOG.warn(unknownContainerType(container));
+            return null;
         }
     }
 
@@ -304,11 +294,12 @@ public class RegionUtils {
             }
             return true;
         } else {
-            throw new JadxRuntimeException(unknownContainerType(cont));
+            LOG.warn(unknownContainerType(cont));
+            return false;
         }
     }
 
-    protected static String unknownContainerType(IContainer container) {
+    private static String unknownContainerType(IContainer container) {
         if (container == null) {
             return "Null container variable";
         }

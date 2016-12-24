@@ -87,6 +87,10 @@ public class ClspGraph {
 
     private String searchCommonParent(Set<String> anc, NClass cls) {
         for (NClass p : cls.getParents()) {
+            if (p.equals(cls)) {
+                LOG.warn("searchCommonParent error " + p.getName());
+                continue;
+            }
             String name = p.getName();
             if (anc.contains(name)) {
                 return name;
@@ -121,6 +125,10 @@ public class ClspGraph {
     private void addAncestorsNames(NClass cls, Set<String> result) {
         result.add(cls.getName());
         for (NClass p : cls.getParents()) {
+            if (p.equals(cls)) {
+                LOG.warn("addAncestorsNames error " + p.getName());
+                continue;
+            }
             addAncestorsNames(p, result);
         }
     }

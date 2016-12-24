@@ -17,7 +17,6 @@ public class SSAVar extends AttrNode {
     private VarName varName;
     private int startUseAddr;
     private int endUseAddr;
-    @NotNull
     private RegisterArg assign;
     @Nullable
     private PhiInsn usedInPhi;
@@ -25,12 +24,14 @@ public class SSAVar extends AttrNode {
     private ArgType type;
     private boolean typeImmutable;
 
-    public SSAVar(int regNum, int v, @NotNull RegisterArg assign) {
+    public SSAVar(int regNum, int v, RegisterArg assign) {
         this.regNum = regNum;
         this.version = v;
         this.assign = assign;
 
-        assign.setSVar(this);
+        if (assign != null) {
+            assign.setSVar(this);
+        }
         startUseAddr = -1;
         endUseAddr = -1;
     }

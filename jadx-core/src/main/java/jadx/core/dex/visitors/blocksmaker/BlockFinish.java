@@ -45,6 +45,9 @@ public class BlockFinish extends AbstractVisitor {
             return;
         }
         BlockNode handlerBlock = excHandlerAttr.getHandler().getHandlerBlock();
+        if (handlerBlock == null) {
+            return;
+        }
         if (handlerBlock.getPredecessors().size() < 2) {
             return;
         }

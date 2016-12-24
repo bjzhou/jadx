@@ -52,6 +52,8 @@ public class IfMakerHelper {
         final BlockNode thenBlock = info.getThenBlock();
         final BlockNode elseBlock = info.getElseBlock();
 
+        if (thenBlock == null || elseBlock == null) return info;
+
         // select 'then', 'else' and 'exit' blocks
         if (thenBlock.contains(AFlag.RETURN) && elseBlock.contains(AFlag.RETURN)) {
             info.setOutBlock(null);
@@ -135,6 +137,7 @@ public class IfMakerHelper {
     static IfInfo mergeNestedIfNodes(IfInfo currentIf) {
         BlockNode curThen = currentIf.getThenBlock();
         BlockNode curElse = currentIf.getElseBlock();
+        if (curThen == null || curElse == null) return null;
         if (curThen == curElse) {
             return null;
         }
@@ -297,6 +300,7 @@ public class IfMakerHelper {
     }
 
     private static IfInfo getNextIf(IfInfo info, BlockNode block) {
+        if (block == null) return null;
         if (!canSelectNext(info, block)) {
             return null;
         }

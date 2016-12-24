@@ -66,7 +66,7 @@ public class ProcessTryCatchRegions extends AbstractRegionVisitor {
         // for each try block search nearest dominator block
         for (TryCatchBlock tb : tryBlocks) {
             if (tb.getHandlersCount() == 0) {
-                LOG.warn("No exception handlers in catch block, method: {}", mth);
+                LOG.debug("No exception handlers in catch block, method: {}", mth);
                 continue;
             }
             BitSet bs = new BitSet(mth.getBasicBlocks().size());

@@ -212,7 +212,7 @@ public class CodeShrinker extends AbstractVisitor {
 
         private static boolean usedArgAssign(InsnNode insn, BitSet args) {
             RegisterArg result = insn.getResult();
-            return result != null && args.get(result.getRegNum());
+            return result != null && result.getRegNum() >= 0 && args.get(result.getRegNum());
         }
 
         public InsnNode getInsn() {

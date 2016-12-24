@@ -1,6 +1,8 @@
 package jadx.core.utils;
 
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -26,9 +28,9 @@ import jadx.core.dex.nodes.IBlock;
 import jadx.core.dex.nodes.InsnNode;
 import jadx.core.dex.nodes.MethodNode;
 import jadx.core.dex.regions.conditions.IfCondition;
-import jadx.core.utils.exceptions.JadxRuntimeException;
 
 public class BlockUtils {
+    private static final Logger LOG = LoggerFactory.getLogger(BlockUtils.class);
 
     private BlockUtils() {
     }
@@ -39,9 +41,10 @@ public class BlockUtils {
                 return block;
             }
         }
-        throw new JadxRuntimeException("Can't find block by offset: "
+        LOG.warn("Can't find block by offset: "
                 + InsnUtils.formatOffset(offset)
                 + " in list " + casesBlocks);
+        return null;
     }
 
     public static BlockNode selectOther(BlockNode node, List<BlockNode> blocks) {
@@ -50,13 +53,13 @@ public class BlockUtils {
             list = cleanBlockList(list);
         }
         if (list.size() != 2) {
-            throw new JadxRuntimeException("Incorrect nodes count for selectOther: " + node + " in " + list);
+            LOG.warn("Incorrect nodes count for selectOther: " + node + " in " + list);
         }
-        BlockNode first = list.get(0);
+        BlockNode first = list.size() > 0 ? list.get(0) : null;
         if (first != node) {
             return first;
         } else {
-            return list.get(1);
+            return list.size() > 1 ? list.get(1) : null;
         }
     }
 
@@ -270,6 +273,9 @@ public class BlockUtils {
     }
 
     public static List<BlockNode> bitSetToBlocks(MethodNode mth, BitSet bs) {
+        if (bs == null) {
+            return Collections.emptyList();
+        }
         int size = bs.cardinality();
         if (size == 0) {
             return Collections.emptyList();
@@ -425,7 +431,7 @@ public class BlockUtils {
     }
 
     public static BlockNode getPathCross(MethodNode mth, BlockNode b1, BlockNode b2) {
-        if (b1 == null || b2 == null) {
+        if (b1 == null || b2 == null || b1.getDomFrontier() == null || b2.getDomFrontier() == null) {
             return null;
         }
         BitSet b = new BitSet();
