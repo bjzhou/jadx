@@ -1,5 +1,8 @@
 package jadx.core.dex.visitors.ssa;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
@@ -33,6 +36,7 @@ import jadx.core.utils.exceptions.JadxRuntimeException;
         runAfter = BlockFinish.class
 )
 public class SSATransform extends AbstractVisitor {
+    private static final Logger LOG = LoggerFactory.getLogger(SSATransform.class);
 
     private static void process(MethodNode mth) {
         LiveVarAnalysis la = new LiveVarAnalysis(mth);
@@ -71,14 +75,16 @@ public class SSATransform extends AbstractVisitor {
         while (!workList.isEmpty()) {
             BlockNode block = workList.pop();
             BitSet domFrontier = block.getDomFrontier();
-            for (int id = domFrontier.nextSetBit(0); id >= 0; id = domFrontier.nextSetBit(id + 1)) {
-                if (!hasPhi.get(id) && la.isLive(id, regNum)) {
-                    BlockNode df = blocks.get(id);
-                    addPhi(mth, df, regNum);
-                    hasPhi.set(id);
-                    if (!processed.get(id)) {
-                        processed.set(id);
-                        workList.add(df);
+            if (domFrontier != null) {
+                for (int id = domFrontier.nextSetBit(0); id >= 0; id = domFrontier.nextSetBit(id + 1)) {
+                    if (!hasPhi.get(id) && la.isLive(id, regNum)) {
+                        BlockNode df = blocks.get(id);
+                        addPhi(mth, df, regNum);
+                        hasPhi.set(id);
+                        if (!processed.get(id)) {
+                            processed.set(id);
+                            workList.add(df);
+                        }
                     }
                 }
             }
@@ -109,7 +115,8 @@ public class SSATransform extends AbstractVisitor {
 
     private static void renameVariables(MethodNode mth) {
         if (!mth.getSVars().isEmpty()) {
-            throw new JadxRuntimeException("SSA rename variables already executed");
+            LOG.warn("SSA rename variables already executed");
+            return;
         }
         int regsCount = mth.getRegsCount();
         SSAVar[] vars = new SSAVar[regsCount];
@@ -157,8 +164,9 @@ public class SSATransform extends AbstractVisitor {
                     int regNum = reg.getRegNum();
                     SSAVar var = vars[regNum];
                     if (var == null) {
-                        throw new JadxRuntimeException("Not initialized variable reg: " + regNum
+                        LOG.warn("Not initialized variable reg: " + regNum
                                 + ", insn: " + insn + ", block:" + block + ", method: " + mth);
+                        continue;
                     }
                     var.use(reg);
                 }

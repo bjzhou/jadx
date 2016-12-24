@@ -12,13 +12,10 @@ import java.util.Set;
 import jadx.core.dex.nodes.BlockNode;
 import jadx.core.dex.nodes.IRegion;
 import jadx.core.dex.nodes.MethodNode;
-import jadx.core.utils.exceptions.JadxOverflowException;
 
 final class RegionStack {
     private static final Logger LOG = LoggerFactory.getLogger(RegionStack.class);
     private static final boolean DEBUG = false;
-
-    private static final int REGIONS_STACK_LIMIT = 1000;
 
     static {
         if (DEBUG) {
@@ -38,9 +35,6 @@ final class RegionStack {
 
     public void push(IRegion region) {
         stack.push(curState);
-        if (stack.size() > REGIONS_STACK_LIMIT) {
-            throw new JadxOverflowException("Regions stack size limit reached");
-        }
         curState = curState.copy();
         curState.region = region;
         if (DEBUG) {

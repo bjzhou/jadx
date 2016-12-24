@@ -45,6 +45,7 @@ public final class ProcessClass {
                 }
             } catch (Exception e) {
                 ErrorsCounter.classError(cls, e.getClass().getSimpleName(), e);
+                e.printStackTrace();
             } finally {
                 if (cls.getState() == GENERATED) {
                     cls.unload();

@@ -152,7 +152,11 @@ public class RegionMakerVisitor extends AbstractVisitor {
         RegionStack state = new RegionStack(mth);
 
         // fill region structure
-        mth.setRegion(rm.makeRegion(mth.getEnterBlock(), state));
+        try {
+            mth.setRegion(rm.makeRegion(mth.getEnterBlock(), state));
+        } catch (StackOverflowError e) {
+            LOG.warn("makeRegion stack over flow, " + e.getMessage());
+        }
 
         if (!mth.isNoExceptionHandlers()) {
             IRegion expOutBlock = rm.processTryCatchBlocks(mth);

@@ -208,7 +208,7 @@ public class InsnGen {
         return makeInsn(insn, code, null);
     }
 
-    protected boolean makeInsn(InsnNode insn, CodeWriter code, Flags flag) throws CodegenException {
+    protected boolean makeInsn(InsnNode insn, CodeWriter code, Flags flag) {
         try {
             Set<Flags> state = EnumSet.noneOf(Flags.class);
             if (flag == Flags.BODY_ONLY || flag == Flags.BODY_ONLY_NOWRAP) {
@@ -228,7 +228,7 @@ public class InsnGen {
                 }
             }
         } catch (Throwable th) {
-            throw new CodegenException(mth, "Error generate insn: " + insn, th);
+            th.printStackTrace();
         }
         return true;
     }
@@ -451,88 +451,89 @@ public class InsnGen {
 
 			/* fallback mode instructions */
             case IF:
-                fallbackOnlyInsn(insn);
-                IfNode ifInsn = (IfNode) insn;
-                code.add("if (");
-                addArg(code, insn.getArg(0));
-                code.add(' ');
-                code.add(ifInsn.getOp().getSymbol()).add(' ');
-                addArg(code, insn.getArg(1));
-                code.add(") goto ").add(MethodGen.getLabelName(ifInsn.getTarget()));
+                if (isFallback()) {
+                    IfNode ifInsn = (IfNode) insn;
+                    code.add("if (");
+                    addArg(code, insn.getArg(0));
+                    code.add(' ');
+                    code.add(ifInsn.getOp().getSymbol()).add(' ');
+                    addArg(code, insn.getArg(1));
+                    code.add(") goto ").add(MethodGen.getLabelName(ifInsn.getTarget()));
+                }
                 break;
 
             case GOTO:
-                fallbackOnlyInsn(insn);
-                code.add("goto ").add(MethodGen.getLabelName(((GotoNode) insn).getTarget()));
+                if (isFallback()) {
+                    code.add("goto ").add(MethodGen.getLabelName(((GotoNode) insn).getTarget()));
+                }
                 break;
 
             case MOVE_EXCEPTION:
-                fallbackOnlyInsn(insn);
-                code.add("move-exception");
+                if (isFallback()) {
+                    code.add("move-exception");
+                }
                 break;
 
             case SWITCH:
-                fallbackOnlyInsn(insn);
-                SwitchNode sw = (SwitchNode) insn;
-                code.add("switch(");
-                addArg(code, insn.getArg(0));
-                code.add(") {");
-                code.incIndent();
-                for (int i = 0; i < sw.getCasesCount(); i++) {
-                    String key = sw.getKeys()[i].toString();
-                    code.startLine("case ").add(key).add(": goto ");
-                    code.add(MethodGen.getLabelName(sw.getTargets()[i])).add(';');
+                if (isFallback()) {
+                    SwitchNode sw = (SwitchNode) insn;
+                    code.add("switch(");
+                    addArg(code, insn.getArg(0));
+                    code.add(") {");
+                    code.incIndent();
+                    for (int i = 0; i < sw.getCasesCount(); i++) {
+                        String key = sw.getKeys()[i].toString();
+                        code.startLine("case ").add(key).add(": goto ");
+                        code.add(MethodGen.getLabelName(sw.getTargets()[i])).add(';');
+                    }
+                    code.startLine("default: goto ");
+                    code.add(MethodGen.getLabelName(sw.getDefaultCaseOffset())).add(';');
+                    code.decIndent();
+                    code.startLine('}');
                 }
-                code.startLine("default: goto ");
-                code.add(MethodGen.getLabelName(sw.getDefaultCaseOffset())).add(';');
-                code.decIndent();
-                code.startLine('}');
                 break;
 
             case FILL_ARRAY:
-                fallbackOnlyInsn(insn);
-                FillArrayNode arrayNode = (FillArrayNode) insn;
-                Object data = arrayNode.getData();
-                String arrStr;
-                if (data instanceof int[]) {
-                    arrStr = Arrays.toString((int[]) data);
-                } else if (data instanceof short[]) {
-                    arrStr = Arrays.toString((short[]) data);
-                } else if (data instanceof byte[]) {
-                    arrStr = Arrays.toString((byte[]) data);
-                } else if (data instanceof long[]) {
-                    arrStr = Arrays.toString((long[]) data);
-                } else {
-                    arrStr = "?";
+                if (isFallback()) {
+                    FillArrayNode arrayNode = (FillArrayNode) insn;
+                    Object data = arrayNode.getData();
+                    String arrStr;
+                    if (data instanceof int[]) {
+                        arrStr = Arrays.toString((int[]) data);
+                    } else if (data instanceof short[]) {
+                        arrStr = Arrays.toString((short[]) data);
+                    } else if (data instanceof byte[]) {
+                        arrStr = Arrays.toString((byte[]) data);
+                    } else if (data instanceof long[]) {
+                        arrStr = Arrays.toString((long[]) data);
+                    } else {
+                        arrStr = "?";
+                    }
+                    code.add('{').add(arrStr.substring(1, arrStr.length() - 1)).add('}');
                 }
-                code.add('{').add(arrStr.substring(1, arrStr.length() - 1)).add('}');
                 break;
 
             case NEW_INSTANCE:
                 // only fallback - make new instance in constructor invoke
-                fallbackOnlyInsn(insn);
-                code.add("new ").add(insn.getResult().getType().toString());
+                if (isFallback()) {
+                    code.add("new ").add(insn.getResult().getType().toString());
+                }
                 break;
 
             case PHI:
             case MERGE:
-                fallbackOnlyInsn(insn);
-                code.add(insn.getType().toString()).add("(");
-                for (InsnArg insnArg : insn.getArguments()) {
-                    addArg(code, insnArg);
-                    code.add(' ');
+                if (isFallback()) {
+                    code.add(insn.getType().toString()).add("(");
+                    for (InsnArg insnArg : insn.getArguments()) {
+                        addArg(code, insnArg);
+                        code.add(' ');
+                    }
+                    code.add(")");
                 }
-                code.add(")");
                 break;
 
             default:
-                throw new CodegenException(mth, "Unknown instruction: " + insn.getType());
-        }
-    }
-
-    private void fallbackOnlyInsn(InsnNode insn) throws CodegenException {
-        if (!fallback) {
-            throw new CodegenException(insn.getType() + " can be used only in fallback mode");
+                break;
         }
     }
 

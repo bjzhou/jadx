@@ -21,7 +21,6 @@ import jadx.core.dex.nodes.MethodNode;
 import jadx.core.dex.trycatch.CatchAttr;
 import jadx.core.dex.visitors.AbstractVisitor;
 import jadx.core.utils.BlockUtils;
-import jadx.core.utils.exceptions.JadxRuntimeException;
 
 import static jadx.core.dex.visitors.blocksmaker.BlockSplitter.connect;
 import static jadx.core.dex.visitors.blocksmaker.BlockSplitter.removeConnection;
@@ -118,7 +117,7 @@ public class BlockProcessor extends AbstractVisitor {
                     bs.andNot(dom.getDoms());
                 }
                 if (bs.cardinality() != 1) {
-                    throw new JadxRuntimeException("Can't find immediate dominator for block " + block
+                    LOG.warn("Can't find immediate dominator for block " + block
                             + " in " + bs + " preds:" + preds);
                 }
                 idom = basicBlocks.get(bs.nextSetBit(0));
@@ -132,8 +131,12 @@ public class BlockProcessor extends AbstractVisitor {
         for (BlockNode exit : mth.getExitBlocks()) {
             exit.setDomFrontier(EMPTY);
         }
-        for (BlockNode block : mth.getBasicBlocks()) {
-            computeBlockDF(mth, block);
+        try {
+            for (BlockNode block : mth.getBasicBlocks()) {
+                computeBlockDF(mth, block);
+            }
+        } catch (StackOverflowError error) {
+            LOG.warn("computeBlockDF stack over flow, " + error.getMessage());
         }
     }
 
@@ -237,7 +240,8 @@ public class BlockProcessor extends AbstractVisitor {
     private static boolean modifyBlocksTree(MethodNode mth) {
         for (BlockNode block : mth.getBasicBlocks()) {
             if (block.getPredecessors().isEmpty() && block != mth.getEnterBlock()) {
-                throw new JadxRuntimeException("Unreachable block: " + block);
+                LOG.warn("Unreachable block: " + block);
+                continue;
             }
 
             // check loops
