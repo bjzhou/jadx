@@ -28,6 +28,7 @@ public class RenameVisitor extends AbstractVisitor {
     private static final boolean CASE_SENSITIVE_FS = IOCase.SYSTEM.isCaseSensitive();
 
     private Deobfuscator deobfuscator;
+    private int clsIndex = 0;
 
     private static String makeMethodSignature(MethodInfo methodInfo) {
         StringBuilder signature = new StringBuilder();
@@ -91,7 +92,7 @@ public class RenameVisitor extends AbstractVisitor {
         String newShortName = null;
         char firstChar = clsName.charAt(0);
         if (Character.isDigit(firstChar)) {
-            newShortName = Consts.ANONYMOUS_CLASS_PREFIX + clsName;
+            newShortName = Consts.ANONYMOUS_CLASS_PREFIX + (clsIndex++);
         } else if (firstChar == '$') {
             newShortName = "C" + clsName;
         }
