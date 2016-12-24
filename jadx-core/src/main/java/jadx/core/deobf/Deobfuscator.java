@@ -54,6 +54,7 @@ public class Deobfuscator {
 
     private int pkgIndex = 0;
     private int clsIndex = 0;
+    private int mthIndex = 0;
 
     public Deobfuscator(IJadxArgs args, @NotNull List<DexNode> dexNodes, File deobfMapFile) {
         this.args = args;
@@ -475,29 +476,7 @@ public class Deobfuscator {
     }
 
     public String makeMethodAlias(MethodNode mth) {
-        String methodName;
-        String args = "";
-        for (ArgType type : mth.getMethodInfo().getArgumentsTypes()) {
-            args += argType2ShortName(mth.getParentClass().dex(), type);
-        }
-        if (mth.getMethodInfo().getReturnType() == null || mth.getMethodInfo().getReturnType().equals(ArgType.VOID)) {
-            if (args.isEmpty()) {
-                methodName = "Do";
-            } else {
-                methodName = "Set" + args;
-            }
-        } else if (mth.getMethodInfo().getReturnType().equals(ArgType.BOOLEAN)) {
-            methodName = "IsTrue";
-            if (!args.isEmpty()) {
-                methodName += "With" + args;
-            }
-        } else {
-            methodName = "Get" + argType2ShortName(mth.getParentClass().dex(), mth.getMethodInfo().getReturnType());
-            if (!args.isEmpty()) {
-                methodName += "With" + args;
-            }
-        }
-        String alias = String.format("m%s%s", makeName(mth.getName()), makeName(methodName));
+        String alias = String.format("m%d%s", mthIndex++, makeName(mth.getName()));
         mthMap.put(mth.getMethodInfo(), alias);
         return alias;
     }
