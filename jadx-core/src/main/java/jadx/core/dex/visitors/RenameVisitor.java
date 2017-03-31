@@ -1,12 +1,5 @@
 package jadx.core.dex.visitors;
 
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOCase;
-
-import java.io.File;
-import java.util.HashSet;
-import java.util.Set;
-
 import jadx.api.IJadxArgs;
 import jadx.core.Consts;
 import jadx.core.codegen.TypeGen;
@@ -22,6 +15,12 @@ import jadx.core.dex.nodes.MethodNode;
 import jadx.core.dex.nodes.RootNode;
 import jadx.core.utils.exceptions.JadxException;
 import jadx.core.utils.files.InputFile;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOCase;
+
+import java.io.File;
+import java.util.HashSet;
+import java.util.Set;
 
 public class RenameVisitor extends AbstractVisitor {
 
@@ -52,7 +51,7 @@ public class RenameVisitor extends AbstractVisitor {
 
         File deobfMapFile = new File(inputPath, inputName + ".jobf");
         deobfuscator = new Deobfuscator(args, root.getDexNodes(), deobfMapFile);
-        boolean deobfuscationOn = args.isDeobfuscationOn();
+        boolean deobfuscationOn = args.isDeobfuscationOn() || args.useSourceNameAsClassAlias();
         if (deobfuscationOn) {
             deobfuscator.execute();
         }

@@ -1,11 +1,11 @@
 package jadx.cli;
 
-import com.beust.jcommander.IStringConverter;
-import com.beust.jcommander.JCommander;
-import com.beust.jcommander.Parameter;
-import com.beust.jcommander.ParameterDescription;
-import com.beust.jcommander.ParameterException;
-
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.Appender;
+import com.beust.jcommander.*;
+import jadx.api.IJadxArgs;
+import jadx.api.JadxDecompiler;
+import jadx.core.utils.exceptions.JadxException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,12 +16,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.Appender;
-import jadx.api.IJadxArgs;
-import jadx.api.JadxDecompiler;
-import jadx.core.utils.exceptions.JadxException;
 
 public class JadxCLIArgs implements IJadxArgs {
 
@@ -46,7 +40,7 @@ public class JadxCLIArgs implements IJadxArgs {
     @Parameter(names = {"--escape-unicode"}, description = "escape non latin characters in strings (with \\u)")
     protected boolean escapeUnicode = false;
     @Parameter(names = {"--deobf"}, description = "activate deobfuscation")
-    protected boolean deobfuscationOn = true;
+    protected boolean deobfuscationOn = false;
     @Parameter(names = {"--deobf-min"}, description = "min length of name")
     protected int deobfuscationMinLength = 2;
     @Parameter(names = {"--deobf-max"}, description = "max length of name")
