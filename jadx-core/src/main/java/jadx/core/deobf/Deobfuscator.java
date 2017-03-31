@@ -1,20 +1,5 @@
 package jadx.core.deobf;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-
 import jadx.api.IJadxArgs;
 import jadx.core.dex.attributes.AType;
 import jadx.core.dex.attributes.nodes.SourceFileAttr;
@@ -26,6 +11,13 @@ import jadx.core.dex.nodes.ClassNode;
 import jadx.core.dex.nodes.DexNode;
 import jadx.core.dex.nodes.FieldNode;
 import jadx.core.dex.nodes.MethodNode;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.util.*;
 
 public class Deobfuscator {
     public static final String CLASS_NAME_SEPARATOR = ".";
@@ -504,10 +496,11 @@ public class Deobfuscator {
     }
 
     private boolean shouldRename(String s) {
-        return s.length() > maxLength
+        return args.isDeobfuscationOn()
+                && (s.length() > maxLength
                 || s.length() < minLength
                 || NameMapper.isReserved(s)
-                || !NameMapper.isAllCharsPrintable(s);
+                || !NameMapper.isAllCharsPrintable(s));
     }
 
     private String makeName(String name) {
