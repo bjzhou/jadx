@@ -7,9 +7,11 @@ public class NLS {
 
     private static ResourceBundle messages;
 
-    static {
-        load(new Locale("en", "US"));
-    }
+	static {
+		if(Locale.getDefault().getCountry().equals("CN")){
+			load(new Locale("zh", "CN"));
+		}else {load(new Locale("en", "US"));
+	}}
 
     private NLS() {
     }
