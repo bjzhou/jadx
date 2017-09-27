@@ -368,35 +368,37 @@ public class ClassGen {
         }
     }
 
-    private void addFields(CodeWriter code) throws CodegenException {
-        addEnumFields(code);
-        for (FieldNode f : cls.getFields()) {
-            if (f.contains(AFlag.DONT_GENERATE)) {
-                continue;
-            }
-            annotationGen.addForField(code, f);
-            code.startLine(f.getAccessFlags().makeString());
-            useType(code, f.getType());
-            code.add(' ');
-            code.attachDefinition(f);
-            code.add(f.getAlias());
-            FieldInitAttr fv = f.get(AType.FIELD_INIT);
-            if (fv != null) {
-                code.add(" = ");
-                if (fv.getValue() == null) {
-                    code.add(TypeGen.literalToString(0, f.getType(), cls));
-                } else {
-                    if (fv.getValueType() == InitType.CONST) {
-                        annotationGen.encodeValue(code, fv.getValue());
-                    } else if (fv.getValueType() == InitType.INSN) {
-                        InsnGen insnGen = makeInsnGen(fv.getInsnMth());
-                        addInsnBody(insnGen, code, fv.getInsn());
-                    }
-                }
-            }
-            code.add(';');
-        }
-    }
+	private void addFields(CodeWriter code) throws CodegenException {
+		addEnumFields(code);
+		for (FieldNode f : cls.getFields()) {
+			if (f.contains(AFlag.DONT_GENERATE)) {
+				continue;
+			}
+			annotationGen.addForField(code, f);
+			if(f.getFieldInfo().isRenamed()) {
+				code.startLine("/* renamed from: ").add(f.getName()).add(" */");
+			}code.startLine(f.getAccessFlags().makeString());
+			useType(code, f.getType());
+			code.add(' ');
+			code.attachDefinition(f);
+			code.add(f.getAlias());
+			FieldInitAttr fv = f.get(AType.FIELD_INIT);
+			if (fv != null) {
+				code.add(" = ");
+				if (fv.getValue() == null) {
+					code.add(TypeGen.literalToString(0, f.getType(), cls));
+				} else {
+					if (fv.getValueType() == InitType.CONST) {
+						annotationGen.encodeValue(code, fv.getValue());
+					} else if (fv.getValueType() == InitType.INSN) {
+						InsnGen insnGen = makeInsnGen(fv.getInsnMth());
+						addInsnBody(insnGen, code, fv.getInsn());
+					}
+				}
+			}
+			code.add(';');
+		}
+	}
 
     private boolean isFieldsPresents() {
         for (FieldNode field : cls.getFields()) {
@@ -583,13 +585,13 @@ public class ClassGen {
         }
     }
 
-    private void insertRenameInfo(CodeWriter code, ClassNode cls) {
-        ClassInfo classInfo = cls.getClassInfo();
-        if (classInfo.isRenamed()
-                && !cls.getShortName().equals(cls.getAlias().getShortName())) {
-            code.startLine("/* renamed from: ").add(classInfo.getFullName()).add(" */");
-        }
-    }
+	private void insertRenameInfo(CodeWriter code, ClassNode cls) {
+		ClassInfo classInfo = cls.getClassInfo();
+		if (classInfo.isRenamed()) {
+
+			code.startLine("/* renamed from: ").add(classInfo.getType().getObject()).add(" */");
+		}
+	}
 
     public ClassGen getParentGen() {
         return parentGen == null ? this : parentGen;

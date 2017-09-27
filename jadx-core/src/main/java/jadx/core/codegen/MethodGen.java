@@ -106,19 +106,21 @@ public class MethodGen {
         }
         annotationGen.addForMethod(code, mth);
 
-        AccessInfo clsAccFlags = mth.getParentClass().getAccessFlags();
-        AccessInfo ai = mth.getAccessFlags();
-        // don't add 'abstract' and 'public' to methods in interface
-        if (clsAccFlags.isInterface()) {
-            ai = ai.remove(AccessFlags.ACC_ABSTRACT);
-            ai = ai.remove(AccessFlags.ACC_PUBLIC);
-        }
-        // don't add 'public' for annotations
-        if (clsAccFlags.isAnnotation()) {
-            ai = ai.remove(AccessFlags.ACC_PUBLIC);
-        }
-        code.startLineWithNum(mth.getSourceLine());
-        code.add(ai.makeString());
+		AccessInfo clsAccFlags = mth.getParentClass().getAccessFlags();
+		AccessInfo ai = mth.getAccessFlags();
+		// don't add 'abstract' and 'public' to methods in interface
+		if (clsAccFlags.isInterface()) {
+			ai = ai.remove(AccessFlags.ACC_ABSTRACT);
+			ai = ai.remove(AccessFlags.ACC_PUBLIC);
+		}
+		// don't add 'public' for annotations
+		if (clsAccFlags.isAnnotation()) {
+			ai = ai.remove(AccessFlags.ACC_PUBLIC);
+		}
+		if(mth.getMethodInfo().isRenamed()) {
+			code.startLine("/* renamed from: ").add(mth.getName()).add(" */");
+		}code.startLineWithNum(mth.getSourceLine());
+		code.add(ai.makeString());
 
         if (classGen.addGenericMap(code, mth.getGenericMap())) {
             code.add(' ');

@@ -174,21 +174,23 @@ public class NameGen {
         }
     }
 
-    private String makeNameForObject(ArgType type) {
-        if (type.isObject()) {
-            String alias = getAliasForObject(type.getObject());
-            if (alias != null) {
-                return alias;
-            }
-            ClassInfo extClsInfo = ClassInfo.extCls(mth.dex(), type);
-            String shortName = extClsInfo.getShortName();
-            String vName = fromName(shortName);
-            if (vName != null) {
-                return vName;
-            }
-        }
-        return StringUtils.escape(type.toString());
-    }
+
+
+	private String makeNameForObject(ArgType type) {
+		if (type.isObject()) {
+			String alias = getAliasForObject(type.getObject());
+			if (alias != null) {
+				return alias;
+			}
+			ClassInfo extClsInfo = ClassInfo.extCls(mth.dex(), type);
+			String shortName = extClsInfo.getShortName();
+			String vName = fromName(shortName);
+			if (vName != null) {
+				return vName;
+			}
+		return StringUtils.escape(shortName.toLowerCase());}
+		return StringUtils.escape(type.toString());
+	}
 
     private String makeNameFromInsn(InsnNode insn) {
         switch (insn.getType()) {

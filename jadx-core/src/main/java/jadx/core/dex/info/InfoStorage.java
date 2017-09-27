@@ -1,5 +1,8 @@
 package jadx.core.dex.info;
 
+import jadx.core.dex.instructions.args.ArgType;
+import jadx.core.dex.nodes.DexNode;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -22,16 +25,18 @@ public class InfoStorage {
         }
     }
 
-    public MethodInfo getMethod(int mtdId) {
-        return methods.get(mtdId);
-    }
+	privateint generateMethodLookupId(DexNode dex,int mthId) {
+		return (dex.getDexId()<<16)|mthId;
+	}
 
-    public MethodInfo putMethod(int mthId, MethodInfo mth) {
-        synchronized (methods) {
-            MethodInfo prev = methods.put(mthId, mth);
-            return prev == null ? mth : prev;
-        }
-    }
+	public MethodInfo getMethod(DexNode dex, int mtdId) {
+		return methods.get(generateMethodLookupId(dex,mtdId));
+	}public MethodInfo putMethod(DexNode dex,int mthId, MethodInfo mth) {
+		synchronized (methods) {
+			MethodInfo prev = methods.put(generateMethodLookupId(dex,mthId), mth);
+			return prev == null ? mth : prev;
+		}
+	}
 
     public FieldInfo getField(FieldInfo field) {
         synchronized (fields) {

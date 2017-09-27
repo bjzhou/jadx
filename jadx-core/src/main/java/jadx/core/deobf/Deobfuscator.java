@@ -147,26 +147,28 @@ public class Deobfuscator {
         postProcess();
     }
 
-    private void postProcess() {
-        int id = 1;
-        for (OverridedMethodsNode o : ovrd) {
+	private void postProcess() {
+		int id = 1;
+		for (OverridedMethodsNode o : ovrd) {
+boolean aliasFromPreset = false;
+			String aliasToUse = null;
+			for(MethodInfomth : o.getMethods()){
+			if (mth.isAliasFromPreset()) {
+				aliasToUse = mth.getAlias();
+					aliasFromPreset = true;
+				}
+			}
+			for(MethodInfo mth : o.getMethods()){
+if(aliasToUse == null) {
+				if (mth.isRenamed() && !mth.isAliasFromPreset()) {
+					mth.setAlias(String.format("mo%d%s", id, makeName(mth.getName())));
+				}
+				aliasToUse = mth.getAlias();
+}
 
-            Iterator<MethodInfo> it = o.getMethods().iterator();
-            if (it.hasNext()) {
-                MethodInfo mth = it.next();
-
-                if (mth.isRenamed() && !mth.isAliasFromPreset()) {
-                    mth.setAlias(String.format("mo%d%s", id, makeName(mth.getName())));
-                }
-                String firstMethodAlias = mth.getAlias();
-
-                while (it.hasNext()) {
-                    mth = it.next();
-                    if (!mth.getAlias().equals(firstMethodAlias)) {
-                        mth.setAlias(firstMethodAlias);
-                    }
-                }
-            }
+						mth.setAlias(aliasToUse);
+					mth.setAliasFromPreset(aliasFromPreset);
+			}
 
             id++;
         }

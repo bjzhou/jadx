@@ -35,17 +35,18 @@ public class DexNode implements IDexNode {
     private final RootNode root;
     private final Dex dexBuf;
     private final DexFile file;
+	private final int dexId;
 
     private final List<ClassNode> classes = new ArrayList<ClassNode>();
     private final Map<ClassInfo, ClassNode> clsMap = new HashMap<ClassInfo, ClassNode>();
 
     private final InfoStorage infoStorage = new InfoStorage();
 
-    public DexNode(RootNode root, DexFile input) {
-        this.root = root;
-        this.file = input;
-        this.dexBuf = input.getDexBuf();
-    }
+	public DexNode(RootNode root, DexFile input, int dexId) {
+		this.root = root;
+		this.file = input;
+		this.dexBuf = input.getDexBuf();
+	this.dexId = dexId;}
 
     public void loadClasses() throws DecodeException {
         for (ClassDef cls : dexBuf.classDefs()) {
@@ -153,9 +154,7 @@ public class DexNode implements IDexNode {
         return null;
     }
 
-    public InfoStorage getInfoStorage() {
-        return infoStorage;
-    }
+
 
     public DexFile getDexFile() {
         return file;
@@ -214,8 +213,10 @@ public class DexNode implements IDexNode {
         return this;
     }
 
-    @Override
-    public String toString() {
-        return "DEX";
-    }
+	public int getDexId() {
+		return dexId;
+	}@Override
+	public String toString() {
+		return "DEX";
+	}
 }
