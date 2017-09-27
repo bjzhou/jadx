@@ -12,9 +12,9 @@ dependencies {
     compile(project(":jadx-cli"))
 }
 
-sonarRunner {
-    skipProject = true
-}
+//sonarRunner {
+//    skipProject = true
+//}
 
 task deleteTmp(type: Delete) {
     delete testAppTmpDir

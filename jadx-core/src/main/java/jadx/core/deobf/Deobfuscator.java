@@ -152,7 +152,7 @@ public class Deobfuscator {
 		for (OverridedMethodsNode o : ovrd) {
 boolean aliasFromPreset = false;
 			String aliasToUse = null;
-			for(MethodInfomth : o.getMethods()){
+			for(MethodInfo mth : o.getMethods()){
 			if (mth.isAliasFromPreset()) {
 				aliasToUse = mth.getAlias();
 					aliasFromPreset = true;

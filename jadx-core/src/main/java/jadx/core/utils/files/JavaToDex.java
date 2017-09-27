@@ -28,7 +28,21 @@ import static java.lang.System.setOut;
 public class JavaToDex {
 
     private static final String CHARSET_NAME = "UTF-8";
-    private String dxErrors;
+	private String dxErrors;
+	
+	public static class DxArgs extends Arguments {
+		public DxArgs(String dexFile, String[] input) {
+			outName = dexFile;
+			fileNames = input;
+			jarOutput = false;
+
+			optimize = true;
+			localInfo = true;
+			coreLibrary = true;
+
+			debug = true;
+		}
+	}
 
 	public byte[] convert(String javaFile) throws JadxException {
 		try {

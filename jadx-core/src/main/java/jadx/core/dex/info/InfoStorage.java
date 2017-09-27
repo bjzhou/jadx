@@ -25,7 +25,7 @@ public class InfoStorage {
         }
     }
 
-	privateint generateMethodLookupId(DexNode dex,int mthId) {
+	private int generateMethodLookupId(DexNode dex,int mthId) {
 		return (dex.getDexId()<<16)|mthId;
 	}
 
